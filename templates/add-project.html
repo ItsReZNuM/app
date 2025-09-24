@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ثبت شرکت - سامانه مدیریت پروژه</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/persian-datepicker@latest/dist/css/persian-datepicker.min.css">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: block; /* Always visible to close sidebar from inside */
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+            display: none; /* Hidden by default when sidebar is open */
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block; /* Visible when sidebar is hidden */
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block; /* Ensure open button is visible when sidebar is open */
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none; /* Ensure close button is hidden when sidebar is open */
+        }
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .error-message {
+            color: #E53935;
+            display: none;
+        }
+        .dark .error-message {
+            color: #F87171;
+        }
+        .tax-button {
+            transition: background-color 0.2s ease;
+        }
+        .tax-button-active {
+            background-color: #27AE60 !important;
+            border-color: #219653 !important;
+        }
+        .tax-button-inactive {
+            background-color: #E74C3C !important;
+            border-color: #C0392B !important;
+        }
+        /* Modal specific styles */
+        .modal {
+            display: none;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+        .modal-open {
+            display: flex;
+        }
+        .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal table {
+            background-color: white;
+            border: 2px solid #F4511E;
+            border-radius: 8px;
+        }
+        .modal th {
+            background-color: #F4511E;
+            color: white;
+            padding: 6px;
+        }
+        .dark .modal table {
+            background-color: #1F2937;
+            border-color: #F87171;
+        }
+        .dark .modal th {
+            background-color: #F87171;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">ثبت شرکت</h2>
+                <form id="project-form" class="space-y-4">
+                    <div>
+                        <label for="company_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شناسه ملی شرکت</label>
+                        <input type="text" id="company_id" name="company_id" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت" required>
+                        <p id="company_id-error" class="error-message text-sm mt-1">شناسه ملی نمی‌تواند خالی باشد!</p>
+                    </div>
+                    <div>
+                        <label for="company_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نام شرکت</label>
+                        <input type="text" id="company_name" name="company_name" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="نام شرکت" required>
+                        <p id="company_name-error" class="error-message text-sm mt-1">نام شرکت نمی‌تواند خالی باشد!</p>
+                    </div>
+                    <button type="button" id="select-company" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 dark:hover:bg-blue-400 transition">انتخاب از لیست شرکت‌ها</button>
+                    <div>
+                        <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">موضوع</label>
+                        <input type="text" id="subject" name="subject" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="موضوع پروژه">
+                    </div>
+                    <div>
+                        <label for="project_code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">کد پروژه</label>
+                        <input type="text" id="project_code" name="project_code" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="کد پروژه">
+                    </div>
+                    <div>
+                        <label for="contract_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره قرارداد</label>
+                        <input type="text" id="contract_number" name="contract_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره قرارداد">
+                    </div>
+                    <div>
+                        <label for="contract_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ قرارداد</label>
+                        <input type="text" id="contract_date" name="contract_date" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label for="initial_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ اولیه قرارداد</label>
+                        <input type="text" id="initial_amount" name="initial_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ اولیه (ریال)">
+                        <p id="initial_amount-error" class="error-message text-sm mt-1">مبلغ اولیه باید عدد باشد!</p>
+                    </div>
+                    <div>
+                        <label for="change_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ افزایش/کاهش</label>
+                        <input type="text" id="change_amount" name="change_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ افزایش/کاهش (ریال)">
+                        <p id="change_amount-error" class="error-message text-sm mt-1">مبلغ افزایش/کاهش باید عدد باشد!</p>
+                    </div>
+                    <div>
+                        <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ شروع پیمان</label>
+                        <input type="text" id="start_date" name="start_date" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مدت پیمان (ماه)</label>
+                        <input type="text" id="duration" name="duration" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مدت پیمان">
+                        <p id="duration-error" class="error-message text-sm mt-1">مدت پیمان باید عدد باشد!</p>
+                    </div>
+                    <div>
+                        <label for="extension_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تمدید مدت پیمان</label>
+                        <input type="text" id="extension_date" name="extension_date" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره تماس</label>
+                        <div id="contact-numbers-container">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" name="contact_numbers_1" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره تماس ۱">
+                                <button type="button" id="add-contact-number" class="mt-1 p-2 bg-green-600 text-white rounded-lg hover:bg-green-500 dark:hover:bg-green-700 transition font-bold text-lg leading-none flex items-center justify-center">
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="archive_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره بایگانی</label>
+                        <input type="text" id="archive_number" name="archive_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره بایگانی">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">مفاصا حساب و بیمه</label>
+                        <div class="flex justify-center gap-x-24 mt-1">
+                            <label class="flex items-center">
+                                <input type="radio" name="tax_clearance" value="1" class="tax-button h-5 w-5 text-green-600">
+                                <span class="mr-2 text-gray-700 dark:text-gray-300">دارد</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="tax_clearance" value="0" class="tax-button h-5 w-5 text-red-600" checked>
+                                <span class="mr-2 text-gray-700 dark:text-gray-300">ندارد</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="contract_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نوع قرارداد</label>
+                        <select id="contract_type" name="contract_type" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <option value="پیمانکاری">پیمانکاری</option>
+                            <option value="خرید">خرید</option>
+                            <option value="خدمات">خدمات</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">وضعیت پروژه</label>
+                        <select id="project_status" name="project_status" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <option value="در حال اجرا">در حال اجرا</option>
+                            <option value="تکمیل شده">تکمیل شده</option>
+                            <option value="متوقف شده">متوقف شده</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-center gap-x-20">
+                        <button type="submit" class="bg-green-800 text-white py-2 px-4 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition">ذخیره</button>
+                        <button type="button" id="back" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition">بازگشت</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <div id="company-modal" class="modal fixed inset-0 items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-2xl w-full modal-content">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">انتخاب شرکت</h2>
+                <input type="text" id="modal-search" placeholder="جستجو..." class="mb-4 p-2 border border-gray-300 dark:border-gray-600 rounded w-full dark:bg-gray-700 dark:text-gray-100">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-2">شناسه ملی</th>
+                            <th class="p-2">نام شرکت</th>
+                            <th class="p-2">انتخاب</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-companies-table-body"></tbody>
+                </table>
+                <button id="close-modal-companies" class="mt-4 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition">بستن</button>
+            </div>
+        </div>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/new-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <script src="https://unpkg.com/persian-date@latest/dist/persian-date.min.js"></script>
+    <script src="https://unpkg.com/persian-datepicker@latest/dist/js/persian-datepicker.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+            const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+            const contentWrapper = document.getElementById('content-wrapper');
+            const form = document.getElementById('project-form');
+            const selectCompanyBtn = document.getElementById('select-company');
+            const backBtn = document.getElementById('back');
+            const companyIdInput = document.getElementById('company_id');
+            const companyNameInput = document.getElementById('company_name');
+            const addContactNumberBtn = document.getElementById('add-contact-number');
+            const contactNumbersContainer = document.getElementById('contact-numbers-container');
+            let contactNumberCount = 1;
+
+            // Modal elements
+            const companyModal = document.getElementById('company-modal');
+            const modalSearchInput = document.getElementById('modal-search');
+            const modalCompaniesTableBody = document.getElementById('modal-companies-table-body');
+            const closeModalCompaniesBtn = document.getElementById('close-modal-companies');
+
+            // Escape HTML to prevent XSS
+            const escapeHtml = (unsafe) => {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            };
+
+            // Check login status
+            const checkLogin = async () => {
+                try {
+                    const response = await fetch('/api/check-login', {
+                        credentials: 'include'
+                    });
+                    if (response.status === 401) {
+                        Toastify({
+                            text: "لطفاً ابتدا وارد شوید",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "center",
+                            style: {
+                                background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                            },
+                        }).showToast();
+                        window.location.href = '/login';
+                    } else if (!response.ok) {
+                        throw new Error('خطای شبکه');
+                    }
+                } catch (error) {
+                    console.error('Login check failed:', error);
+                    Toastify({
+                        text: "خطا در بررسی وضعیت ورود: " + error.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "center",
+                        style: {
+                            background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                        },
+                    }).showToast();
+                    window.location.href = '/login';
+                }
+            };
+
+            // Check if company_id exists
+            const checkCompanyId = async (companyId) => {
+                try {
+                    const response = await fetch(`/api/projects/${companyId}`, {
+                        credentials: 'include'
+                    });
+                    return response.ok; // true if exists, false if 404
+                } catch {
+                    return false;
+                }
+            };
+
+            // Initialize sidebar state
+            const initSidebar = () => {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    contentWrapper.classList.add('content-shrunk');
+                    toggleSidebarClosed.style.display = 'none';
+                    toggleSidebarOpen.style.display = 'block';
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                    toggleSidebarClosed.style.display = 'block';
+                    toggleSidebarOpen.style.display = 'none';
+                }
+            };
+
+            // Toggle sidebar
+            const toggleSidebar = () => {
+                sidebar.classList.toggle('sidebar-hidden');
+                if (window.innerWidth >= 768) {
+                    contentWrapper.classList.toggle('content-shrunk');
+                }
+                if (sidebar.classList.contains('sidebar-hidden')) {
+                    toggleSidebarClosed.style.display = 'block';
+                    toggleSidebarOpen.style.display = 'none';
+                } else {
+                    toggleSidebarClosed.style.display = 'none';
+                    toggleSidebarOpen.style.display = 'block';
+                }
+            };
+
+            // Handle window resize
+            const handleResize = () => {
+                if (window.innerWidth >= 768) {
+                    if (sidebar.classList.contains('sidebar-hidden')) {
+                        sidebar.classList.remove('sidebar-hidden');
+                        contentWrapper.classList.add('content-shrunk');
+                        toggleSidebarClosed.style.display = 'none';
+                        toggleSidebarOpen.style.display = 'block';
+                    }
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                    toggleSidebarClosed.style.display = 'block';
+                    toggleSidebarOpen.style.display = 'none';
+                }
+            };
+
+            // Format numeric fields
+            const formatNumericFields = () => {
+                const numericFields = ['initial_amount', 'change_amount', 'duration'];
+                numericFields.forEach(field => {
+                    const input = document.getElementById(field);
+                    input.addEventListener('input', () => {
+                        let value = input.value.replace(/,/g, '');
+                        if (value && !isNaN(value)) {
+                            input.value = parseInt(value).toLocaleString('fa-IR');
+                        }
+                    });
+                });
+            };
+
+            // Update company name based on company_id
+            const updateCompanyName = async () => {
+                const companyId = companyIdInput.value.trim();
+                if (companyId) {
+                    try {
+                        const response = await fetch('/api/projects/');
+                        if (response.ok) {
+                            const allProjects = await response.json();
+                            const foundCompany = allProjects.find(p => p.company_id === companyId);
+                            companyNameInput.value = foundCompany ? escapeHtml(foundCompany.company_name) : '';
+                            if (!foundCompany) {
+                                console.warn('Company not found for ID:', companyId);
+                            }
+                        } else {
+                            companyNameInput.value = '';
+                            console.warn('Could not fetch projects to find company ID:', companyId);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching companies:', error);
+                        companyNameInput.value = '';
+                    }
+                } else {
+                    companyNameInput.value = '';
+                }
+            };
+
+            // Add contact number field
+            const addContactNumberField = () => {
+                if (contactNumberCount < 3) {
+                    contactNumberCount++;
+                    const newContactDiv = document.createElement('div');
+                    newContactDiv.classList.add('flex', 'items-center', 'space-x-2', 'mt-4');
+                    newContactDiv.innerHTML = `
+                        <input type="text" name="contact_numbers_${contactNumberCount}" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره تماس ${contactNumberCount}">
+                    `;
+                    contactNumbersContainer.appendChild(newContactDiv);
+
+                    if (contactNumberCount === 3) {
+                        addContactNumberBtn.disabled = true;
+                        addContactNumberBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            };
+
+            // Reset contact numbers
+            const resetContactNumbers = () => {
+                contactNumberCount = 1;
+                contactNumbersContainer.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <input type="text" name="contact_numbers_1" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره تماس ۱">
+                        <button type="button" id="add-contact-number" class="mt-1 p-2 bg-green-600 text-white rounded-lg hover:bg-green-500 dark:hover:bg-green-700 transition font-bold text-lg leading-none flex items-center justify-center">
+                            +
+                        </button>
+                    </div>
+                `;
+                document.getElementById('add-contact-number').addEventListener('click', addContactNumberField);
+                addContactNumberBtn.disabled = false;
+                addContactNumberBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            };
+
+            // Validate form
+            const validateForm = async (data) => {
+                let isValid = true;
+                document.querySelectorAll('.error-message').forEach(e => e.style.display = 'none');
+
+                if (!data.company_id || data.company_id.trim() === '') {
+                    document.getElementById('company_id-error').style.display = 'block';
+                    isValid = false;
+                }
+                if (!data.company_name || data.company_name.trim() === '') {
+                    document.getElementById('company_name-error').style.display = 'block';
+                    isValid = false;
+                }
+                if (data.initial_amount !== null && !Number.isInteger(parseFloat(data.initial_amount))) {
+                    document.getElementById('initial_amount-error').style.display = 'block';
+                    isValid = false;
+                }
+                if (data.change_amount !== null && !Number.isInteger(parseFloat(data.change_amount))) {
+                    document.getElementById('change_amount-error').style.display = 'block';
+                    isValid = false;
+                }
+                if (data.duration !== null && !Number.isInteger(parseFloat(data.duration))) {
+                    document.getElementById('duration-error').style.display = 'block';
+                    isValid = false;
+                }
+                // Check for duplicate company_id
+                if (data.company_id && isValid) {
+                    const companyExists = await checkCompanyId(data.company_id);
+                    if (companyExists) {
+                        document.getElementById('company_id-error').style.display = 'block';
+                        document.getElementById('company_id-error').textContent = 'این شناسه ملی قبلاً ثبت شده است';
+                        isValid = false;
+                    }
+                }
+
+                return isValid;
+            };
+
+            // Handle form submission
+            const handleFormSubmit = async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+
+                const contactNumbers = [];
+                for (let i = 1; i <= contactNumberCount; i++) {
+                    const input = document.querySelector(`input[name="contact_numbers_${i}"]`);
+                    if (input && input.value.trim()) {
+                        contactNumbers.push(input.value.trim());
+                    }
+                }
+
+                const data = {
+                    company_id: formData.get('company_id').trim(),
+                    company_name: formData.get('company_name').trim(),
+                    subject: formData.get('subject') || null,
+                    project_code: formData.get('project_code') || null,
+                    contract_number: formData.get('contract_number') || null,
+                    contract_date: formData.get('contract_date') || null,
+                    initial_amount: formData.get('initial_amount') ? parseInt(formData.get('initial_amount').replace(/,/g, '')) : null,
+                    change_amount: formData.get('change_amount') ? parseInt(formData.get('change_amount').replace(/,/g, '')) : null,
+                    start_date: formData.get('start_date') || null,
+                    duration: formData.get('duration') ? parseInt(formData.get('duration').replace(/,/g, '')) : null,
+                    extension_date: formData.get('extension_date') || null,
+                    contact_numbers: contactNumbers.length > 0 ? contactNumbers.join(', ') : null,
+                    archive_number: formData.get('archive_number') || null,
+                    tax_clearance: parseInt(formData.get('tax_clearance') || 0),
+                    contract_type: formData.get('contract_type') || null,
+                    project_status: formData.get('project_status') || null
+                };
+
+                if (!await validateForm(data)) return;
+
+                try {
+                    const response = await fetch('/api/projects/', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        const text = await response.text();
+                        throw new Error(`خطای سرور: پاسخ غیرمنتظره دریافت شد - ${text}`);
+                    }
+
+                    const responseData = await response.json();
+
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            Toastify({
+                                text: "لطفاً ابتدا وارد شوید",
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "center",
+                                style: {
+                                    background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                },
+                            }).showToast();
+                            window.location.href = '/login';
+                        } else if (response.status === 400 && responseData.detail.includes('شناسه ملی')) {
+                            Toastify({
+                                text: "این شناسه ملی قبلاً ثبت شده است",
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "center",
+                                style: {
+                                    background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                },
+                            }).showToast();
+                        } else if (response.status === 422) {
+                            Toastify({
+                                text: `داده‌های ورودی نامعتبر: ${JSON.stringify(responseData.detail)}`,
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "center",
+                                style: {
+                                    background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                },
+                            }).showToast();
+                        } else {
+                            throw new Error(responseData.detail || 'خطا در ذخیره پروژه');
+                        }
+                    } else {
+                        Toastify({
+                            text: "پروژه با موفقیت ذخیره شد!",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "center",
+                            style: {
+                                background: "linear-gradient(to right, #00b09b, #96c93d)",
+                            },
+                        }).showToast();
+                        form.reset();
+                        document.querySelector('input[name="tax_clearance"][value="0"]').checked = true;
+                        resetContactNumbers();
+                    }
+                } catch (error) {
+                    console.error('Error saving project:', error);
+                    Toastify({
+                        text: error.message || "خطا در ذخیره پروژه!",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "center",
+                        style: {
+                            background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                        },
+                    }).showToast();
+                }
+            };
+
+            // Initialize tax clearance buttons
+            const initTaxButtons = () => {
+                const taxButtons = document.querySelectorAll('input[name="tax_clearance"]');
+                taxButtons.forEach(button => {
+                    button.addEventListener('change', () => {
+                        taxButtons.forEach(btn => {
+                            btn.nextElementSibling.classList.remove('tax-button-active', 'tax-button-inactive');
+                            if (btn.checked) {
+                                btn.nextElementSibling.classList.add(btn.value === '1' ? 'tax-button-active' : 'tax-button-inactive');
+                            }
+                        });
+                    });
+                });
+                document.querySelector('input[name="tax_clearance"][value="0"]').dispatchEvent(new Event('change'));
+            };
+
+            // Open company selection modal and load companies
+            const openCompanyModal = async (searchTerm = '') => {
+                try {
+                    const response = await fetch(`/api/projects/${searchTerm ? `?search=${searchTerm}` : ''}`, {
+                        credentials: 'include'
+                    });
+                    if (!response.ok) {
+                        const contentType = response.headers.get("content-type");
+                        if (!contentType || !contentType.includes("application/json")) {
+                            const text = await response.text();
+                            throw new Error(`خطای سرور: پاسخ غیرمنتظره دریافت شد - ${text}`);
+                        }
+                        const errorData = await response.json();
+                        if (response.status === 401) {
+                            Toastify({
+                                text: "لطفاً ابتدا وارد شوید",
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "center",
+                                style: {
+                                    background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                },
+                            }).showToast();
+                            window.location.href = '/login';
+                        }
+                        throw new Error(errorData.detail || 'خطا در دریافت لیست شرکت‌ها');
+                    }
+                    const data = await response.json();
+                    modalCompaniesTableBody.innerHTML = '';
+                    const uniqueCompanies = Array.from(new Map(data.map(item => [item.company_id, item])).values());
+
+                    uniqueCompanies.forEach(project => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="border p-2 text-gray-800 dark:text-gray-100">${escapeHtml(project.company_id)}</td>
+                            <td class="border p-2 text-gray-800 dark:text-gray-100">${escapeHtml(project.company_name)}</td>
+                            <td class="border p-2">
+                                <button onclick="selectCompany('${escapeHtml(project.company_id)}', '${escapeHtml(project.company_name)}')" class="bg-green-600 text-white p-1 rounded hover:bg-green-500 dark:hover:bg-green-700 transition">انتخاب</button>
+                            </td>
+                        `;
+                        modalCompaniesTableBody.appendChild(row);
+                    });
+                    companyModal.classList.add('modal-open');
+                } catch (error) {
+                    console.error('Error loading companies for modal:', error);
+                    Toastify({
+                        text: error.message || "خطا در بارگذاری شرکت‌ها!",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "center",
+                        style: {
+                            background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                        },
+                    }).showToast();
+                }
+            };
+
+            // Select company from modal and populate form fields
+            const selectCompany = (companyId, companyName) => {
+                document.getElementById('company_id').value = escapeHtml(companyId);
+                document.getElementById('company_name').value = escapeHtml(companyName);
+                companyModal.classList.remove('modal-open');
+            };
+
+            // Highlight current page in sidebar
+            const highlightCurrentPage = () => {
+                const currentPath = window.location.pathname;
+                const navLinks = document.querySelectorAll('#sidebar nav a');
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === currentPath) {
+                        link.classList.add('bg-green-700');
+                    } else {
+                        link.classList.remove('bg-green-700');
+                    }
+                });
+            };
+
+            // Initialize dark mode
+            const initDarkMode = () => {
+                if (localStorage.getItem('darkMode') === 'enabled') {
+                    document.documentElement.classList.add('dark');
+                }
+            };
+
+            // Event Listeners
+            checkLogin();
+            initSidebar();
+            initDarkMode();
+            formatNumericFields();
+            initTaxButtons();
+            highlightCurrentPage();
+
+            $('#contract_date').persianDatepicker({
+                format: 'YYYY/MM/DD',
+                autoClose: true
+            });
+            $('#start_date').persianDatepicker({
+                format: 'YYYY/MM/DD',
+                autoClose: true
+            });
+            $('#extension_date').persianDatepicker({
+                format: 'YYYY/MM/DD',
+                autoClose: true
+            });
+
+            companyIdInput.addEventListener('input', updateCompanyName);
+            selectCompanyBtn.addEventListener('click', () => openCompanyModal());
+            contactNumbersContainer.querySelector('#add-contact-number').addEventListener('click', addContactNumberField);
+            form.addEventListener('submit', handleFormSubmit);
+            backBtn.addEventListener('click', () => window.location.href = '/');
+            toggleSidebarOpen.addEventListener('click', toggleSidebar);
+            toggleSidebarClosed.addEventListener('click', toggleSidebar);
+            window.addEventListener('resize', handleResize);
+
+            modalSearchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                openCompanyModal(searchTerm);
+            });
+            closeModalCompaniesBtn.addEventListener('click', () => {
+                companyModal.classList.remove('modal-open');
+            });
+
+            window.selectCompany = selectCompany;
+        });
+    </script>
+</body>
+</html>

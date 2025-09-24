@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تضامین - سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: none;
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+        }
+        .sidebar-hidden #toggle-sidebar-open {
+            display: none;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block;
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none;
+        }
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .error-message {
+            color: #E53935;
+            display: none;
+        }
+        .dark .error-message {
+            color: #F87171;
+        }
+        .dynamic-field {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .dynamic-field.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">بخش تضامین</h2>
+                <form id="guarantee-form" class="space-y-6">
+                    <div class="flex items-center">
+                        <label for="company_id" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شناسه ملی شرکت</label>
+                        <input type="text" id="company_id" name="company_id" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                    </div>
+                    <p id="company_id-error" class="error-message text-sm mt-1">شناسه ملی نمی‌تواند خالی باشد!</p>
+                    <button type="button" id="select-company" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 dark:hover:bg-blue-400 transition">انتخاب از لیست شرکت‌ها</button>
+                    <div class="flex items-center">
+                        <label for="record_number" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شماره ردیف</label>
+                        <input type="number" id="record_number" name="record_number" min="1" step="1" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره ردیف">
+                    </div>
+                    <div class="flex items-center">
+                        <label for="guarantee_type" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">نوع تضمین</label>
+                        <select id="guarantee_type" name="guarantee_type" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <option value="">انتخاب کنید</option>
+                            <option value="ضمانت‌نامه">ضمانت‌نامه</option>
+                            <option value="سپرده">سپرده</option>
+                        </select>
+                    </div>
+                    <div id="dynamic-fields" class="space-y-6"></div>
+                    <div class="flex justify-between">
+                        <button type="button" id="save" class="w-1/2 bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mr-2">ذخیره</button>
+                        <button type="button" id="back" class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">بازگشت</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/add-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <script>
+        // ==================== Constants ====================
+        const API_BASE_URL = '/api/guarantees/';
+        const ERROR_MESSAGES = {
+            COMPANY_ID_REQUIRED: 'شناسه ملی نمی‌تواند خالی باشد!',
+            INVALID_NUMBER: 'لطفاً یک عدد معتبر وارد کنید!',
+            SAVE_SUCCESS: 'اطلاعات تضامین با موفقیت ذخیره شد!',
+            SAVE_ERROR: 'خطا در ذخیره اطلاعات!',
+            NETWORK_ERROR: 'خطا در ارتباط با سرور!'
+        };
+
+        // ==================== DOM Elements ====================
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+        const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+        const contentWrapper = document.getElementById('content-wrapper');
+        const guaranteeForm = document.getElementById('guarantee-form');
+        const companyIdInput = document.getElementById('company_id');
+        const recordNumberInput = document.getElementById('record_number');
+        const guaranteeTypeSelect = document.getElementById('guarantee_type');
+        const selectCompanyBtn = document.getElementById('select-company');
+        const saveBtn = document.getElementById('save');
+        const backBtn = document.getElementById('back');
+        const dynamicFields = document.getElementById('dynamic-fields');
+        const companyIdError = document.getElementById('company_id-error');
+
+        // ==================== Initialization ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLogin();
+            initializeSidebar();
+            setupEventListeners();
+            handleUrlParameters();
+            updateDynamicFields();
+        });
+
+        // ==================== Authentication ====================
+        const checkLogin = async () => {
+            try {
+                const response = await fetch('/api/check-login', {
+                    credentials: 'include'  // این خط مهم است
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                } else if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        };
+
+        // ==================== Sidebar Management ====================
+        function initializeSidebar() {
+            if (window.innerWidth >= 768) {
+                sidebar.classList.remove('sidebar-hidden');
+                contentWrapper.classList.add('content-shrunk');
+            } else {
+                sidebar.classList.add('sidebar-hidden');
+                contentWrapper.classList.remove('content-shrunk');
+            }
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('sidebar-hidden');
+            if (window.innerWidth >= 768) {
+                contentWrapper.classList.toggle('content-shrunk');
+            }
+        }
+
+        // ==================== Event Listeners ====================
+        function setupEventListeners() {
+            // Sidebar events
+            toggleSidebarOpen.addEventListener('click', toggleSidebar);
+            toggleSidebarClosed.addEventListener('click', toggleSidebar);
+            
+            // Window resize event
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    if (sidebar.classList.contains('sidebar-hidden')) {
+                        sidebar.classList.remove('sidebar-hidden');
+                        contentWrapper.classList.add('content-shrunk');
+                    }
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                }
+            });
+
+            // Form events
+            guaranteeTypeSelect.addEventListener('change', updateDynamicFields);
+            selectCompanyBtn.addEventListener('click', () => window.location.href = '/companies?select=true');
+            saveBtn.addEventListener('click', saveGuarantee);
+            backBtn.addEventListener('click', resetForm);
+        }
+
+        // ==================== Form Field Management ====================
+        function normalizeDigits(str) {
+            if (!str) return '';
+            const map = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9',
+                        '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+            return String(str).replace(/[۰-۹٠-٩]/g, d => map[d]);
+            }
+        function parseNumberField(value) {
+            if (!value) return null;
+            const raw = normalizeDigits(value).replace(/[,٬\s]/g, ''); // حذف , و ٬
+            return raw && !isNaN(raw) ? Number(raw) : null;
+            }
+
+        function updateDynamicFields() {
+            const guaranteeType = guaranteeTypeSelect.value;
+            dynamicFields.innerHTML = '';
+
+            const fields = getFieldsForGuaranteeType(guaranteeType);
+            
+            fields.forEach(field => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'flex items-center dynamic-field';
+                fieldDiv.innerHTML = createFieldHTML(field);
+                dynamicFields.appendChild(fieldDiv);
+                
+                setTimeout(() => fieldDiv.classList.add('show'), 10);
+                
+                // Add number formatting for amount fields
+                if (['guarantee_amount', 'deposit_amount', 'deposit_released_amount'].includes(field.id)) {
+                    addNumberFormatting(document.getElementById(field.id));
+                }
+            });
+        }
+
+        function getFieldsForGuaranteeType(guaranteeType) {
+            if (guaranteeType === 'ضمانت‌نامه') {
+                return [
+                    { label: 'نوع ضمانت‌نامه', id: 'guarantee_category', type: 'select', options: ['انجام تعهدات', 'پیش پرداخت', 'علی الحساب', 'سفته', 'پرداخت کسور وجه الزمان'] },
+                    { label: 'شماره ضمانت‌نامه', id: 'guarantee_number', type: 'text' },
+                    { label: 'تاریخ ضمانت‌نامه', id: 'guarantee_date', type: 'text', placeholder: 'YYYY-MM-DD' },
+                    { label: 'مبلغ ضمانت‌نامه', id: 'guarantee_amount', type: 'text', placeholder: 'مبلغ ضمانت‌نامه (ریال)' },
+                    { label: 'بانک عامل', id: 'guarantee_bank', type: 'text' },
+                    { label: 'تاریخ انقضا', id: 'guarantee_expiry', type: 'text', placeholder: 'YYYY-MM-DD' }
+                ];
+            } else if (guaranteeType === 'سپرده') {
+                return [
+                    { label: 'نوع سپرده', id: 'deposit_type', type: 'select', options: ['حسن انجام کار', 'تامین اجتماعی'] },
+                    { label: 'تاریخ سپرده', id: 'deposit_date', type: 'text', placeholder: 'YYYY-MM-DD' },
+                    { label: 'مبلغ سپرده', id: 'deposit_amount', type: 'text', placeholder: 'مبلغ سپرده (ریال)' },
+                    { label: 'دلیل آزادسازی', id: 'deposit_release_reason', type: 'text' },
+                    { label: 'مبلغ آزاد شده', id: 'deposit_released_amount', type: 'text', placeholder: 'مبلغ آزاد شده (ریال)' },
+                    { label: 'تاریخ آزادسازی', id: 'deposit_release_date', type: 'text', placeholder: 'YYYY-MM-DD' }
+                ];
+            }
+            return [];
+        }
+
+        function createFieldHTML(field) {
+            if (field.type === 'select') {
+                return `
+                    <label for="${field.id}" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">${field.label}</label>
+                    <select id="${field.id}" name="${field.id}" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                        ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                    </select>
+                `;
+            } else {
+                return `
+                    <label for="${field.id}" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">${field.label}</label>
+                    <input type="text" id="${field.id}" name="${field.id}" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="${field.placeholder || ''}">
+                `;
+            }
+        }
+
+        // ==================== Number Formatting ====================
+        function addNumberFormatting(input) {
+            input.addEventListener('input', () => {
+                formatNumberInput(input);
+            });
+            
+            input.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (!formatNumberInput(input)) {
+                    showError(ERROR_MESSAGES.INVALID_NUMBER);
+                }
+            });
+        }
+
+        function formatNumberInput(input) {
+            try {
+                const value = input.value.replace(/,/g, '');
+                if (value && !isNaN(value)) {
+                    input.value = parseFloat(value).toLocaleString('en-US');
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.error('Formatting error:', e);
+                return false;
+            }
+        }
+
+        // ==================== Form Handling ====================
+        function validateForm() {
+            const companyId = companyIdInput.value.trim();
+            if (!companyId) {
+                showError(ERROR_MESSAGES.COMPANY_ID_REQUIRED, companyIdError);
+                return false;
+            }
+            const recordNumber = recordNumberInput.value.trim();
+            if (!recordNumber || isNaN(normalizeDigits(recordNumber))) {
+                alert('شماره ردیف الزامی و باید عدد باشد');
+                return false;
+            }
+            if (!guaranteeTypeSelect.value) {
+                alert('نوع تضمین را انتخاب کنید');
+                return false;
+            }
+            return true;
+           
+        function getFormData() {
+            const formData = new FormData(guaranteeForm);
+            const data = {
+                company_id: formData.get('company_id'),
+                record_number: formData.get('record_number') || null,
+                guarantee_type: formData.get('guarantee_type') || null,
+                guarantee_category: formData.get('guarantee_category') || null,
+                guarantee_number: formData.get('guarantee_number') || null,
+                guarantee_date: formData.get('guarantee_date') || null,
+                guarantee_amount: parseNumberField(formData.get('guarantee_amount')),
+                guarantee_bank: formData.get('guarantee_bank') || null,
+                guarantee_expiry: formData.get('guarantee_expiry') || null,
+                deposit_type: formData.get('deposit_type') || null,
+                deposit_date: formData.get('deposit_date') || null,
+                deposit_amount: parseNumberField(formData.get('deposit_amount')),
+                deposit_release_reason: formData.get('deposit_release_reason') || null,
+                deposit_released_amount: parseNumberField(formData.get('deposit_released_amount')),
+                deposit_release_date: formData.get('deposit_release_date') || null
+            };
+            return data;
+        }
+
+        function parseNumberField(value) {
+            if (!value) return null;
+            try {
+                return parseFloat(value.replace(/,/g, ''));
+            } catch {
+                return null;
+            }
+        }
+
+        async function saveGuarantee() {
+            if (!validateForm()) return;
+
+            try {
+                const data = getFormData();
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || ERROR_MESSAGES.SAVE_ERROR);
+                }
+
+                showSuccess(ERROR_MESSAGES.SAVE_SUCCESS);
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Save error:', error);
+                showError(error.message || ERROR_MESSAGES.NETWORK_ERROR);
+            }
+        }
+
+        function resetForm() {
+            guaranteeForm.reset();
+            dynamicFields.innerHTML = '';
+            guaranteeTypeSelect.value = '';
+            window.location.href = '/';
+        }
+
+        // ==================== Error/Success Handling ====================
+        function showError(message, element = null) {
+            if (element) {
+                element.textContent = message;
+                element.style.display = 'block';
+            } else {
+                alert(message);
+            }
+        }
+
+        function showSuccess(message) {
+            alert(message);
+        }
+
+        // ==================== URL Parameter Handling ====================
+        function handleUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('company_id')) {
+                companyIdInput.value = urlParams.get('company_id');
+                companyIdError.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

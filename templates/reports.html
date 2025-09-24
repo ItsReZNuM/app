@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گزارش‌گیری - سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: none;
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+        }
+        .sidebar-hidden #toggle-sidebar-open {
+            display: none;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block;
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none;
+        }
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .error-message {
+            color: #E53935;
+            display: none;
+        }
+        .dark .error-message {
+            color: #F87171;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            z-index: 100;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .toast.success {
+            background-color: #2E7D32;
+        }
+        .toast.error {
+            background-color: #E53935;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="toast" class="toast"></div>
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">📊 بخش گزارش‌گیری</h2>
+                <form id="reports-form" class="space-y-6">
+                    <div class="flex items-center">
+                        <label for="company_id" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شناسه ملی شرکت</label>
+                        <input type="text" id="company_id" name="company_id" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                    </div>
+                    <p id="company_id-error" class="error-message text-sm mt-1">لطفاً شناسه ملی را وارد کنید!</p>
+                    <div class="flex items-center">
+                        <label for="report_type" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">نوع گزارش</label>
+                        <select id="report_type" name="report_type" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <option value="مشخصات پروژه">مشخصات پروژه</option>
+                            <option value="وضعیت مالی">وضعیت مالی</option>
+                            <option value="تضامین">تضامین</option>
+                            <option value="بیمه تأمین اجتماعی">بیمه تأمین اجتماعی</option>
+                            <option value="گزارش کلی">گزارش کلی</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between">
+                        <button type="button" id="generate-report" class="w-1/2 bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mr-2">دریافت گزارش</button>
+                        <button type="button" id="back" class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">بازگشت</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/new-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <script>
+        /**
+         * Report Generator Module
+         * Handles report generation functionality with proper error handling and validation
+         */
+        const ReportGenerator = (() => {
+            // DOM Elements
+            const elements = {
+                form: document.getElementById('reports-form'),
+                companyIdInput: document.getElementById('company_id'),
+                reportTypeSelect: document.getElementById('report_type'),
+                generateReportBtn: document.getElementById('generate-report'),
+                backBtn: document.getElementById('back'),
+                companyIdError: document.getElementById('company_id-error'),
+                reportTypeError: document.getElementById('report_type-error'),
+                toast: document.getElementById('toast')
+            };
+
+            // Initialize the module
+            function init() {
+                setupEventListeners();
+                checkLoginStatus();
+            }
+
+            // Set up event listeners
+            function setupEventListeners() {
+                elements.form.addEventListener('submit', handleFormSubmit);
+                elements.backBtn.addEventListener('click', navigateToHome);
+                elements.companyIdInput.addEventListener('input', () => hideError(elements.companyIdError));
+                elements.reportTypeSelect.addEventListener('change', () => hideError(elements.reportTypeError));
+            }
+
+            // Check if user is logged in
+            const checkLogin = async () => {
+                try {
+                    const response = await fetch('/api/check-login', {
+                        credentials: 'include'  // این خط مهم است
+                    });
+                    
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                    } else if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                } catch (error) {
+                    window.location.href = '/login';
+                }
+            };
+
+            // Handle form submission
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+                
+                const companyId = elements.companyIdInput.value.trim();
+                const reportType = elements.reportTypeSelect.value;
+                
+                if (!validateInputs(companyId, reportType)) {
+                    return;
+                }
+
+                try {
+                    elements.generateReportBtn.disabled = true;
+                    elements.generateReportBtn.textContent = 'در حال تولید گزارش...';
+                    
+                    await generateReport(companyId, reportType);
+                    
+                    showToast('گزارش با موفقیت تولید و دانلود شد', 'success');
+                } catch (error) {
+                    console.error('Error generating report:', error);
+                    showToast(error.message || 'خطا در تولید گزارش!', 'error');
+                } finally {
+                    elements.generateReportBtn.disabled = false;
+                    elements.generateReportBtn.textContent = 'دریافت گزارش';
+                }
+            }
+
+            // Validate form inputs
+            function validateInputs(companyId, reportType) {
+                let isValid = true;
+                
+                if (!companyId) {
+                    showError(elements.companyIdError, 'لطفاً شناسه ملی را وارد کنید!');
+                    isValid = false;
+                } else if (!/^\d+$/.test(companyId)) {
+                    showError(elements.companyIdError, 'شناسه ملی باید عددی باشد!');
+                    isValid = false;
+                }
+                
+                if (!reportType) {
+                    showError(elements.reportTypeError, 'لطفاً نوع گزارش را انتخاب کنید!');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+
+            // Generate report via API
+            async function generateReport(companyId, reportType) {
+                const response = await fetch('/api/reports', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('appPassword')}`
+                    },
+                    body: JSON.stringify({ 
+                        company_id: companyId, 
+                        report_type: reportType 
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'خطا در تولید گزارش!');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${reportType}_${companyId}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            }
+
+            // Show error message
+            function showError(element, message) {
+                element.textContent = message;
+                element.style.display = 'block';
+            }
+
+            // Hide error message
+            function hideError(element) {
+                element.style.display = 'none';
+            }
+
+            // Show toast notification
+            function showToast(message, type) {
+                elements.toast.textContent = message;
+                elements.toast.className = `toast ${type} show`;
+                setTimeout(() => {
+                    elements.toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Navigate to home page
+            function navigateToHome() {
+                window.location.href = '/';
+            }
+
+            return {
+                init
+            };
+        })();
+
+        /**
+         * Sidebar Module
+         * Handles sidebar functionality
+         */
+        const SidebarManager = (() => {
+            // Initialize the module
+            function init() {
+                const sidebar = document.getElementById('sidebar');
+                const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+                const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+                const contentWrapper = document.getElementById('content-wrapper');
+
+                function toggleSidebar() {
+                    sidebar.classList.toggle('sidebar-hidden');
+                    if (window.innerWidth >= 768) {
+                        contentWrapper.classList.toggle('content-shrunk');
+                    }
+                }
+
+                toggleSidebarOpen.addEventListener('click', toggleSidebar);
+                toggleSidebarClosed.addEventListener('click', toggleSidebar);
+
+                // Responsive sidebar handling
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 768) {
+                        if (sidebar.classList.contains('sidebar-hidden')) {
+                            sidebar.classList.remove('sidebar-hidden');
+                            contentWrapper.classList.add('content-shrunk');
+                        }
+                    } else {
+                        sidebar.classList.add('sidebar-hidden');
+                        contentWrapper.classList.remove('content-shrunk');
+                    }
+                });
+
+                // Initial sidebar state
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    contentWrapper.classList.add('content-shrunk');
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                }
+            }
+
+            return {
+                init
+            };
+        })();
+
+        // Initialize modules when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            ReportGenerator.init();
+            SidebarManager.init();
+        });
+    </script>
+</body>
+</html>

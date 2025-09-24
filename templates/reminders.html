@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>یادآوری‌ها - سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        /* Adjusted positioning for toggle buttons */
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: none; /* Hidden by default when sidebar is open */
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+        }
+        /* Show/hide logic for toggle buttons */
+        .sidebar.sidebar-hidden + #toggle-sidebar-closed {
+            display: block; /* Show closed button when sidebar is hidden */
+        }
+        .sidebar:not(.sidebar-hidden) + #toggle-sidebar-closed {
+            display: none; /* Hide closed button when sidebar is open */
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block; /* Show open button when sidebar is open */
+        }
+        .sidebar.sidebar-hidden #toggle-sidebar-open {
+            display: none; /* Hide open button when sidebar is hidden */
+        }
+
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .error-message {
+            color: #E53935;
+            display: none;
+        }
+        .dark .error-message {
+            color: #F87171;
+        }
+        .reminder-item {
+            background-color: white;
+            border: 2px solid #F4511E;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            cursor: pointer; /* Indicate clickable */
+        }
+        .dark .reminder-item {
+            background-color: #1F2A44;
+            border-color: #D84315;
+        }
+        .reminder-details {
+            display: none; /* Hidden by default */
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #E5E7EB; /* Subtle separator */
+            color: #4B5563; /* Darker text for details */
+        }
+        .dark .reminder-details {
+            border-top-color: #4B5563;
+            color: #D1D5DB;
+        }
+        .reminder-details.expanded {
+            display: block; /* Show when expanded */
+        }
+
+        .notification-bell {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .notification-bell:hover {
+            background: rgba(244, 81, 30, 0.3);
+            border-radius: 20px;
+        }
+        .notification-bell:active {
+            background: rgba(212, 67, 21, 0.5);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        /* Modal Content Styling (Adjusted for better fit) */
+        .modal-content {
+            background-color: #E0F2F1; /* Light green-teal background */
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 380px; /* Slightly wider */
+            text-align: right;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            border: 1px solid #B2DFDB; /* Light border */
+        }
+        .dark .modal-content {
+            background-color: #2F4F4F; /* Darker green-gray for dark mode */
+            border: 1px solid #4F8080; /* Dark mode border */
+        }
+        .modal-content label {
+            color: #374151; /* Darker gray for labels */
+        }
+        .dark .modal-content label {
+            color: #D1D5DB; /* Lighter gray for labels in dark mode */
+        }
+        .modal-content input,
+        .modal-content textarea {
+            background-color: #FFFFFF; /* White background for inputs */
+            border-color: #4CAF50; /* Green border for inputs */
+            color: #1F2937; /* Dark text in inputs */
+        }
+        .dark .modal-content input,
+        .dark .modal-content textarea {
+            background-color: #4B5563; /* Darker background for inputs in dark mode */
+            border-color: #607D8B; /* Darker border in dark mode */
+            color: #F3F4F6; /* Light text in inputs in dark mode */
+        }
+        .modal-content input:focus,
+        .modal-content textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.5); /* Green focus ring */
+            border-color: #4CAF50;
+        }
+        .dark .modal-content input:focus,
+        .dark .modal-content textarea:focus {
+            box-shadow: 0 0 0 2px rgba(96, 125, 139, 0.5);
+            border-color: #607D8B;
+        }
+
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            z-index: 100;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .toast.success {
+            background-color: #2E7D32;
+        }
+        .toast.error {
+            background-color: #E53935;
+        }
+        .toast.warning {
+            background-color: #FB8C00;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div id="toast" class="toast"></div>
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+            <button id="notification-bell" class="absolute left-4 notification-bell">
+                <img src="/static/icons/bell.svg" class="w-7 h-7" alt="زنگوله اعلانات">
+            </button>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">📌 آرشیو یادآوری‌ها</h2>
+                    <button id="add-reminder" class="bg-green-700 text-white py-2 px-4 rounded-lg hover:bg-green-600 dark:hover:bg-green-500 transition">افزودن یادآوری جدید</button>
+                </div>
+                <div id="reminder-list" class="space-y-4"></div>
+            </div>
+        </main>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/new-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <div id="add-reminder-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">افزودن یادآوری جدید</h3>
+            <form id="add-reminder-form" class="space-y-4">
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">موضوع یادآوری <span class="text-red-500">*</span></label>
+                    <input type="text" id="subject" name="subject" class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100" placeholder="موضوع یادآوری را وارد کنید..." required>
+                    <p id="subject-error" class="error-message text-sm mt-1">لطفاً موضوع یادآوری را وارد کنید!</p>
+                </div>
+                <div>
+                    <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300">متن یادآوری (اختیاری)</label>
+                    <textarea id="message" name="message" class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100" placeholder="متن یادآوری را وارد کنید..." rows="4"></textarea>
+                </div>
+                <div>
+                    <label for="jalali_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ یادآوری (جلالی - اختیاری)</label>
+                    <input type="text" id="jalali_date" name="jalali_date" class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مثلاً 1403-05-12">
+                    <p id="jalali_date-error" class="error-message text-sm mt-1">فرمت تاریخ معتبر (yyyy-mm-dd) وارد کنید!</p>
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" id="save-reminder" class="w-1/2 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-500 dark:hover:bg-orange-400 transition mr-2">ذخیره</button>
+                    <button type="button" id="cancel-reminder" class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="reminder-notification-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">یادآوری</h3>
+            <p id="notification-message" class="text-gray-700 dark:text-gray-300 mb-4"></p>
+            <button id="mark-read" class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-500 dark:hover:bg-orange-400 transition">خوانده شد</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jalaali-js@1.2.6/dist/jalaali.min.js"></script>
+    <script>
+        /**
+         * Reminder Manager Module
+         * Handles all reminder-related functionality including CRUD operations
+         */
+        const ReminderManager = (() => {
+            // DOM Elements
+            const elements = {
+                notificationBell: document.getElementById('notification-bell'),
+                addReminderBtn: document.getElementById('add-reminder'),
+                reminderList: document.getElementById('reminder-list'),
+                addReminderModal: document.getElementById('add-reminder-modal'),
+                addReminderForm: document.getElementById('add-reminder-form'),
+                subjectInput: document.getElementById('subject'), // New subject input
+                messageInput: document.getElementById('message'),
+                jalaliDateInput: document.getElementById('jalali_date'),
+                saveReminderBtn: document.getElementById('save-reminder'),
+                cancelReminderBtn: document.getElementById('cancel-reminder'),
+                reminderNotificationModal: document.getElementById('reminder-notification-modal'),
+                notificationMessage: document.getElementById('notification-message'),
+                markReadBtn: document.getElementById('mark-read'),
+                toast: document.getElementById('toast')
+            };
+
+            // Initialize the module
+            function init() {
+                checkLoginStatus();
+                setupEventListeners();
+                loadReminders();
+                startReminderChecker();
+            }
+
+            // Set up event listeners
+            function setupEventListeners() {
+                // Notification bell menu
+                elements.notificationBell.addEventListener('click', showNotificationMenu);
+
+                // Reminder form
+                elements.addReminderBtn.addEventListener('click', () => showModal(elements.addReminderModal));
+                elements.cancelReminderBtn.addEventListener('click', () => hideModal(elements.addReminderModal));
+                elements.saveReminderBtn.addEventListener('click', handleSaveReminder);
+
+                // Notification modal
+                elements.markReadBtn.addEventListener('click', handleMarkAsRead);
+
+                // Input validation
+                elements.subjectInput.addEventListener('input', () => hideError('subject-error')); // Subject validation
+                elements.messageInput.addEventListener('input', () => hideError('message-error'));
+                elements.jalaliDateInput.addEventListener('input', () => hideError('jalali_date-error'));
+
+                // Close add reminder modal when clicking outside
+                window.addEventListener('click', function(event) {
+                    if (event.target === elements.addReminderModal) {
+                        hideModal(elements.addReminderModal);
+                    }
+                });
+            }
+
+            // Check if user is logged in
+            const checkLoginStatus = async () => {
+                try {
+                    const response = await fetch('/api/check-login', {
+                        credentials: 'include'
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                    } else if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                } catch (error) {
+                    window.location.href = '/login';
+                }
+            };
+
+            // Show notification menu
+            function showNotificationMenu(e) {
+                const menu = document.createElement('div');
+                menu.className = 'absolute bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-2 mt-2';
+                menu.style.left = `${e.clientX}px`;
+                menu.style.top = `${e.clientY}px`;
+                menu.innerHTML = `
+                    <button id="show-reminders" class="block w-full text-right px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">مشاهده یادآوری‌ها</button>
+                    <button id="add-new-reminder" class="block w-full text-right px-4 py-2 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">افزودن یادآوری جدید</button>
+                `;
+                document.body.appendChild(menu);
+
+                document.getElementById('show-reminders').addEventListener('click', () => {
+                    window.location.href = '/reminders';
+                    menu.remove();
+                });
+
+                document.getElementById('add-new-reminder').addEventListener('click', () => {
+                    showModal(elements.addReminderModal);
+                    menu.remove();
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (!menu.contains(event.target) && event.target !== elements.notificationBell) {
+                        menu.remove();
+                    }
+                }, { once: true });
+            }
+
+            // Show modal dialog
+            function showModal(modal) {
+                modal.style.display = 'flex';
+            }
+
+            // Hide modal dialog
+            function hideModal(modal) {
+                modal.style.display = 'none';
+                if (modal === elements.addReminderModal) {
+                    elements.addReminderForm.reset();
+                    hideError('subject-error'); // Reset subject error
+                    hideError('message-error');
+                    hideError('jalali_date-error');
+                }
+            }
+
+            // Load all reminders
+            async function loadReminders() {
+                try {
+                    showLoading(elements.reminderList);
+
+                    const response = await fetch('/api/reminders', {
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(await response.text());
+                    }
+
+                    const reminders = await response.json();
+                    renderReminders(reminders);
+
+                } catch (error) {
+                    console.error('Error loading reminders:', error);
+                    showToast('خطا در بارگذاری یادآوری‌ها', 'error');
+                }
+            }
+
+            // Render reminders list
+            function renderReminders(reminders) {
+                elements.reminderList.innerHTML = '';
+
+                if (reminders.length === 0) {
+                    elements.reminderList.innerHTML = `
+                        <div class="text-center text-gray-500 dark:text-gray-400 py-4">
+                            هیچ یادآوری ثبت نشده است
+                        </div>
+                    `;
+                    return;
+                }
+
+                reminders.forEach(reminder => {
+                    const statusText = reminder.status === 1 ? '✅ خوانده شده' : '⏳ جدید';
+                    const reminderItem = document.createElement('div');
+                    reminderItem.className = 'reminder-item flex flex-col p-3 rounded-lg shadow-sm mb-2'; // Adjusted for flex-col
+                    reminderItem.dataset.id = reminder.id; // Store ID for potential future use
+
+                    let detailsHtml = '';
+                    if (reminder.message || reminder.jalali_date) {
+                         detailsHtml = `
+                            <div class="reminder-details text-sm">
+                                ${reminder.message ? `<p class="mt-1"><strong>متن:</strong> ${reminder.message}</p>` : ''}
+                                ${reminder.jalali_date ? `<p class="mt-1"><strong>تاریخ:</strong> ${reminder.jalali_date}</p>` : ''}
+                            </div>
+                        `;
+                    }
+
+
+                    reminderItem.innerHTML = `
+                        <div class="flex justify-between items-center w-full">
+                            <span class="flex-1 text-gray-800 dark:text-gray-100 font-semibold cursor-pointer reminder-subject">${reminder.subject || 'بدون موضوع'}</span>
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">${statusText}</span>
+                                <button class="delete-reminder bg-red-600 text-white py-1 px-2 rounded hover:bg-red-500 dark:hover:bg-red-400 text-xs">🗑 حذف</button>
+                            </div>
+                        </div>
+                        ${detailsHtml}
+                    `;
+                    elements.reminderList.appendChild(reminderItem);
+                });
+
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-reminder').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        event.stopPropagation(); // Prevent toggling details when deleting
+                        if (confirm('آیا مطمئن هستید که می‌خواهید این یادآوری را حذف کنید؟')) {
+                            const reminderId = button.closest('.reminder-item').dataset.id;
+                            await deleteReminder(reminderId);
+                        }
+                    });
+                });
+
+                // Add event listeners for expanding/collapsing details
+                document.querySelectorAll('.reminder-item .reminder-subject').forEach(subjectSpan => {
+                    subjectSpan.addEventListener('click', (event) => {
+                        const reminderItem = event.target.closest('.reminder-item');
+                        const details = reminderItem.querySelector('.reminder-details');
+                        if (details) {
+                            details.classList.toggle('expanded');
+                        }
+                    });
+                });
+            }
+
+            // Delete a reminder
+            async function deleteReminder(reminderId) {
+                try {
+                    showLoading(elements.reminderList);
+
+                    const response = await fetch(`/api/reminders/${reminderId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(await response.text());
+                    }
+
+                    showToast('یادآوری با موفقیت حذف شد', 'success');
+                    await loadReminders(); // Reload reminders after deletion
+
+                } catch (error) {
+                    console.error('Error deleting reminder:', error);
+                    showToast('خطا در حذف یادآوری', 'error');
+                    await loadReminders(); // Even on error, try to reload to reflect current state
+                }
+            }
+
+            // Handle save reminder form submission
+            async function handleSaveReminder() {
+                const subject = elements.subjectInput.value.trim(); // Get subject
+                const message = elements.messageInput.value.trim();
+                const jalaliDate = elements.jalaliDateInput.value.trim();
+
+                // Validate inputs
+                if (!validateReminderForm(subject, message, jalaliDate)) {
+                    return;
+                }
+
+                try {
+                    showLoading(elements.saveReminderBtn);
+
+                    let gregorianDateStr = null;
+                    if (jalaliDate) {
+                        // Convert jalali to gregorian only if date is provided
+                        const [year, month, day] = jalaliDate.split('-').map(Number);
+                        const gregorianDate = jalaali.toGregorian(year, month, day);
+                        gregorianDateStr = `${gregorianDate.gy}-${String(gregorianDate.gm).padStart(2, '0')}-${String(gregorianDate.gd).padStart(2, '0')}`;
+                    }
+
+
+                    // Create reminder data
+                    const data = {
+                        subject: subject, // Add subject to data
+                        message: message || null, // Optional
+                        jalali_date: jalaliDate || null, // Optional
+                        gregorian_date: gregorianDateStr,
+                        status: 0
+                    };
+
+                    // Send to server
+                    const response = await fetch('/api/reminders', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        throw new Error(errorData);
+                    }
+
+                    showToast('یادآوری با موفقیت ذخیره شد', 'success');
+                    hideModal(elements.addReminderModal);
+                    await loadReminders();
+
+                } catch (error) {
+                    console.error('Error saving reminder:', error);
+                    showToast(`خطا در ذخیره یادآوری: ${error.message}`, 'error');
+                } finally {
+                    hideLoading(elements.saveReminderBtn, 'ذخیره');
+                }
+            }
+
+            // Validate reminder form inputs
+            function validateReminderForm(subject, message, jalaliDate) {
+                let isValid = true;
+
+                // Subject is mandatory
+                if (!subject) {
+                    showError('subject-error', 'لطفاً موضوع یادآوری را وارد کنید!');
+                    isValid = false;
+                }
+
+                // Date is optional, but if provided, must be valid format
+                if (jalaliDate && !/^\d{4}-\d{2}-\d{2}$/.test(jalaliDate)) {
+                    showError('jalali_date-error', 'فرمت تاریخ معتبر (yyyy-mm-dd) وارد کنید!');
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            // Start periodic reminder checker
+            function startReminderChecker() {
+                checkReminders();
+                setInterval(checkReminders, 60000); // Check every 60 seconds
+            }
+
+            // Check for pending reminders (now considers subject too)
+            async function checkReminders() {
+                try {
+                    const response = await fetch('/api/reminders/pending', {
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(await response.text());
+                    }
+
+                    const reminders = await response.json();
+                    const today = new Date().toISOString().split('T')[0];
+
+                    reminders.forEach(reminder => {
+                        if (reminder.gregorian_date === today && reminder.status === 0) {
+                            elements.notificationMessage.textContent = `${reminder.subject}: ${reminder.message || 'بدون توضیحات'}`;
+                            elements.reminderNotificationModal.dataset.id = reminder.id;
+                            showModal(elements.reminderNotificationModal);
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Error checking reminders:', error);
+                }
+            }
+
+            // Handle mark as read button
+            async function handleMarkAsRead() {
+                const reminderId = elements.reminderNotificationModal.dataset.id;
+
+                try {
+                    showLoading(elements.markReadBtn);
+
+                    const response = await fetch(`/api/reminders/${reminderId}/read`, {
+                        method: 'PUT',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(await response.text());
+                    }
+
+                    hideModal(elements.reminderNotificationModal);
+                    await loadReminders();
+
+                } catch (error) {
+                    console.error('Error marking reminder as read:', error);
+                    showToast('خطا در علامت‌گذاری یادآوری', 'error');
+                } finally {
+                    hideLoading(elements.markReadBtn, 'خوانده شد');
+                }
+            }
+
+            // Show loading state
+            function showLoading(element) {
+                if (element === elements.reminderList) {
+                    element.innerHTML = `
+                        <div class="text-center py-4">
+                            <div class="loading-spinner mx-auto"></div>
+                            <p class="mt-2 text-gray-500 dark:text-gray-400">در حال بارگذاری...</p>
+                        </div>
+                    `;
+                } else {
+                    const originalText = element.textContent;
+                    element.dataset.originalText = originalText;
+                    element.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+                    element.disabled = true;
+                }
+            }
+
+            // Hide loading state
+            function hideLoading(element, defaultText = null) {
+                if (element === elements.reminderList) {
+                    return;
+                }
+
+                const text = defaultText || element.dataset.originalText;
+                if (text) {
+                    element.textContent = text;
+                }
+                element.disabled = false;
+            }
+
+            // Show error message
+            function showError(elementId, message) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = message;
+                    element.style.display = 'block';
+                }
+            }
+
+            // Hide error message
+            function hideError(elementId) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            }
+
+            // Show toast notification
+            function showToast(message, type = 'info') {
+                elements.toast.textContent = message;
+                elements.toast.className = `toast ${type} show`;
+
+                setTimeout(() => {
+                    elements.toast.classList.remove('show');
+                }, 3000);
+            }
+
+            return {
+                init
+            };
+        })();
+
+        // کد سایدبار استخراج شده و جایگذاری شده از index.html
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const contentWrapper = document.getElementById('content-wrapper');
+            const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+            const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('sidebar-hidden');
+                if (window.innerWidth >= 768) {
+                    contentWrapper.classList.toggle('content-shrunk');
+                }
+            }
+
+            toggleSidebarOpen.addEventListener('click', toggleSidebar);
+            toggleSidebarClosed.addEventListener('click', toggleSidebar);
+
+            // Responsive sidebar handling
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    // If sidebar is currently hidden on large screens, make it visible and shrink content
+                    if (sidebar.classList.contains('sidebar-hidden')) {
+                        sidebar.classList.remove('sidebar-hidden');
+                        contentWrapper.classList.add('content-shrunk');
+                    }
+                } else {
+                    // On small screens, always hide sidebar and unshrink content
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                }
+            });
+
+            // Initial sidebar state on page load
+            if (window.innerWidth >= 768) {
+                sidebar.classList.remove('sidebar-hidden');
+                contentWrapper.classList.add('content-shrunk');
+            } else {
+                sidebar.classList.add('sidebar-hidden');
+                contentWrapper.classList.remove('content-shrunk');
+            }
+
+            // Initialize ReminderManager
+            ReminderManager.init();
+        });
+    </script>
+</body>
+</html>

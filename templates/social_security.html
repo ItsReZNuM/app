@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بیمه تأمین اجتماعی - سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: none;
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+        }
+        .sidebar-hidden #toggle-sidebar-open {
+            display: none;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block;
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none;
+        }
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .error-message {
+            color: #E53935;
+            display: none;
+        }
+        .dark .error-message {
+            color: #F87171;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            z-index: 100;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .toast.success {
+            background-color: #2E7D32;
+        }
+        .toast.error {
+            background-color: #E53935;
+        }
+        .toast.warning {
+            background-color: #FB8C00;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="toast" class="toast"></div>
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">بیمه تأمین اجتماعی</h2>
+                <form id="social-security-form" class="space-y-6">
+                    <div class="flex items-center">
+                        <label for="company_id" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شناسه ملی شرکت</label>
+                        <input type="text" id="company_id" name="company_id" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                    </div>
+                    <p id="company_id-error" class="error-message text-sm mt-1">شناسه ملی نمی‌تواند خالی باشد!</p>
+                    <div class="flex items-center">
+                        <label for="record_number" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شماره ردیف</label>
+                        <input type="text" id="record_number" name="record_number" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره ردیف">
+                    </div>
+                    <p id="record_number-error" class="error-message text-sm mt-1">لطفاً یک شماره ردیف معتبر وارد کنید!</p>
+                    <div class="flex items-center">
+                        <label for="insurance_amount" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">مبلغ بیمه</label>
+                        <input type="text" id="insurance_amount" name="insurance_amount" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ بیمه (ریال)">
+                    </div>
+                    <p id="insurance_amount-error" class="error-message text-sm mt-1">لطفاً یک عدد معتبر وارد کنید!</p>
+                    <div class="flex items-center">
+                        <label for="payment_method" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">نحوه پرداخت</label>
+                        <select id="payment_method" name="payment_method" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <option value="">-- انتخاب کنید --</option>
+                            <option value="نقد">نقد</option>
+                            <option value="اوراق">اوراق</option>
+                        </select>
+                    </div>
+                    <p id="payment_method-error" class="error-message text-sm mt-1">لطفاً نحوه پرداخت را انتخاب کنید!</p>
+                    <div class="flex justify-between">
+                        <button type="button" id="save" class="w-1/2 bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mr-2">ذخیره</button>
+                        <button type="button" id="back" class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">بازگشت</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/new-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <script>
+        /**
+         * Social Security Manager Module
+         * Handles all social security-related functionality
+         */
+        const SocialSecurityManager = (() => {
+            // DOM Elements
+            const elements = {
+                sidebar: document.getElementById('sidebar'),
+                toggleSidebarOpen: document.getElementById('toggle-sidebar-open'),
+                toggleSidebarClosed: document.getElementById('toggle-sidebar-closed'),
+                contentWrapper: document.getElementById('content-wrapper'),
+                form: document.getElementById('social-security-form'),
+                companyIdInput: document.getElementById('company_id'),
+                recordNumberInput: document.getElementById('record_number'),
+                insuranceAmountInput: document.getElementById('insurance_amount'),
+                paymentMethodSelect: document.getElementById('payment_method'),
+                saveBtn: document.getElementById('save'),
+                backBtn: document.getElementById('back'),
+                toast: document.getElementById('toast')
+            };
+
+            // Initialize the module
+            function init() {
+                checkLoginStatus();
+                setupEventListeners();
+                setupNumberFormatting();
+            }
+
+            // Set up event listeners
+            function setupEventListeners() {
+                // Sidebar toggle
+                elements.toggleSidebarOpen.addEventListener('click', toggleSidebar);
+                elements.toggleSidebarClosed.addEventListener('click', toggleSidebar);
+                
+                // Responsive sidebar handling
+                window.addEventListener('resize', handleResponsiveSidebar);
+                
+                // Form submission
+                elements.form.addEventListener('submit', handleFormSubmit);
+                
+                // Back button
+                elements.backBtn.addEventListener('click', navigateToHome);
+                
+                // Input validation
+                elements.companyIdInput.addEventListener('input', () => hideError('company_id-error'));
+                elements.recordNumberInput.addEventListener('input', () => hideError('record_number-error'));
+                elements.insuranceAmountInput.addEventListener('input', () => hideError('insurance_amount-error'));
+                elements.paymentMethodSelect.addEventListener('change', () => hideError('payment_method-error'));
+            }
+
+            // Check if user is logged in
+            const checkLogin = async () => {
+                try {
+                    const response = await fetch('/api/check-login', {
+                        credentials: 'include'  // این خط مهم است
+                    });
+                    
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                    } else if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                } catch (error) {
+                    window.location.href = '/login';
+                }
+            };
+
+            // Toggle sidebar visibility
+            function toggleSidebar() {
+                elements.sidebar.classList.toggle('sidebar-hidden');
+                if (window.innerWidth >= 768) {
+                    elements.contentWrapper.classList.toggle('content-shrunk');
+                }
+            }
+
+            // Handle responsive sidebar
+            function handleResponsiveSidebar() {
+                if (window.innerWidth >= 768) {
+                    if (elements.sidebar.classList.contains('sidebar-hidden')) {
+                        elements.sidebar.classList.remove('sidebar-hidden');
+                        elements.contentWrapper.classList.add('content-shrunk');
+                    }
+                } else {
+                    elements.sidebar.classList.add('sidebar-hidden');
+                    elements.contentWrapper.classList.remove('content-shrunk');
+                }
+            }
+
+            // Set up number formatting for insurance amount
+            function setupNumberFormatting() {
+                elements.insuranceAmountInput.addEventListener('input', () => {
+                    let value = elements.insuranceAmountInput.value.replace(/,/g, '');
+                    if (value && !isNaN(value)) {
+                        elements.insuranceAmountInput.value = parseFloat(value).toLocaleString('fa-IR');
+                    }
+                });
+                
+                elements.insuranceAmountInput.addEventListener('blur', () => {
+                    let value = elements.insuranceAmountInput.value.replace(/,/g, '');
+                    if (value && !isNaN(value)) {
+                        elements.insuranceAmountInput.value = parseFloat(value).toLocaleString('fa-IR');
+                    } else if (value) {
+                        showError('insurance_amount-error', 'لطفاً یک عدد معتبر وارد کنید!');
+                    }
+                });
+            }
+
+            // Handle form submission
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+                
+                const companyId = elements.companyIdInput.value.trim();
+                const recordNumber = elements.recordNumberInput.value.trim();
+                const insuranceAmount = elements.insuranceAmountInput.value.replace(/,/g, '');
+                const paymentMethod = elements.paymentMethodSelect.value;
+                
+                // Validate inputs
+                if (!validateForm(companyId, recordNumber, insuranceAmount, paymentMethod)) {
+                    return;
+                }
+                
+                try {
+                    showLoading(elements.saveBtn);
+                    
+                    const data = {
+                        company_id: companyId,
+                        record_number: recordNumber,
+                        insurance_amount: insuranceAmount || null,
+                        payment_method: paymentMethod
+                    };
+                    
+                    const response = await fetch('/api/social-security', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('appPassword')}`
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'خطا در ذخیره اطلاعات!');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    showToast('اطلاعات بیمه تأمین اجتماعی با موفقیت ذخیره شد', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                    
+                } catch (error) {
+                    console.error('Error saving social security data:', error);
+                    showToast(error.message || 'خطا در ذخیره اطلاعات!', 'error');
+                } finally {
+                    hideLoading(elements.saveBtn, 'ذخیره');
+                }
+            }
+
+            // Validate form inputs
+            function validateForm(companyId, recordNumber, insuranceAmount, paymentMethod) {
+                let isValid = true;
+                
+                if (!companyId) {
+                    showError('company_id-error', 'شناسه ملی نمی‌تواند خالی باشد!');
+                    isValid = false;
+                }
+                
+                if (!recordNumber || isNaN(recordNumber)) {
+                    showError('record_number-error', 'لطفاً یک شماره ردیف معتبر وارد کنید!');
+                    isValid = false;
+                }
+                
+                if (insuranceAmount && isNaN(insuranceAmount)) {
+                    showError('insurance_amount-error', 'لطفاً یک عدد معتبر وارد کنید!');
+                    isValid = false;
+                }
+                
+                if (!paymentMethod) {
+                    showError('payment_method-error', 'لطفاً نحوه پرداخت را انتخاب کنید!');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+
+            // Navigate to home page
+            function navigateToHome() {
+                elements.form.reset();
+                window.location.href = '/';
+            }
+
+            // Show loading state
+            function showLoading(element) {
+                const originalText = element.textContent;
+                element.dataset.originalText = originalText;
+                element.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+                element.disabled = true;
+            }
+
+            // Hide loading state
+            function hideLoading(element, defaultText = null) {
+                const text = defaultText || element.dataset.originalText;
+                if (text) {
+                    element.textContent = text;
+                }
+                element.disabled = false;
+            }
+
+            // Show error message
+            function showError(elementId, message) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = message;
+                    element.style.display = 'block';
+                }
+            }
+
+            // Hide error message
+            function hideError(elementId) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            }
+
+            // Show toast notification
+            function showToast(message, type = 'info') {
+                elements.toast.textContent = message;
+                elements.toast.className = `toast ${type} show`;
+                
+                setTimeout(() => {
+                    elements.toast.classList.remove('show');
+                }, 3000);
+            }
+
+            return {
+                init
+            };
+        })();
+
+        /**
+         * Sidebar Manager Module
+         * Handles sidebar functionality
+         */
+        const SidebarManager = (() => {
+            // Initialize the module
+            function init() {
+                setInitialState();
+                setupEventListeners();
+            }
+
+            // Set initial sidebar state
+            function setInitialState() {
+                const sidebar = document.getElementById('sidebar');
+                const contentWrapper = document.getElementById('content-wrapper');
+                
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    contentWrapper.classList.add('content-shrunk');
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                }
+            }
+
+            // Set up event listeners
+            function setupEventListeners() {
+                const sidebar = document.getElementById('sidebar');
+                const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+                const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+                const contentWrapper = document.getElementById('content-wrapper');
+
+                // Toggle sidebar
+                toggleSidebarOpen.addEventListener('click', toggleSidebar);
+                toggleSidebarClosed.addEventListener('click', toggleSidebar);
+                
+                // Responsive handling
+                window.addEventListener('resize', handleResponsiveSidebar);
+            }
+
+            // Toggle sidebar visibility
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const contentWrapper = document.getElementById('content-wrapper');
+                
+                sidebar.classList.toggle('sidebar-hidden');
+                if (window.innerWidth >= 768) {
+                    contentWrapper.classList.toggle('content-shrunk');
+                }
+            }
+
+            // Handle responsive sidebar changes
+            function handleResponsiveSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const contentWrapper = document.getElementById('content-wrapper');
+                
+                if (window.innerWidth >= 768) {
+                    if (sidebar.classList.contains('sidebar-hidden')) {
+                        sidebar.classList.remove('sidebar-hidden');
+                        contentWrapper.classList.add('content-shrunk');
+                    }
+                } else {
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                }
+            }
+
+            return {
+                init
+            };
+        })();
+
+        // Initialize modules when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            SocialSecurityManager.init();
+            SidebarManager.init();
+        });
+    </script>
+</body>
+</html>

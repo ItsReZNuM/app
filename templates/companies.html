@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لیست شرکت‌ها - سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet" type="text/css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: block; /* Always visible to close sidebar from inside */
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+            display: none; /* Hidden by default when sidebar is open */
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block; /* Visible when sidebar is hidden */
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block; /* Ensure open button is visible when sidebar is open */
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none; /* Ensure close button is hidden when sidebar is open */
+        }
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .modal {
+            display: none;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .modal-open {
+            display: flex;
+        }
+        table {
+            background-color: white;
+            border: 2px solid #F4511E;
+            border-radius: 8px;
+        }
+        th {
+            background-color: #F4511E;
+            color: white;
+            padding: 6px;
+        }
+        .dark table {
+            background-color: #1F2937;
+            border-color: #F87171;
+        }
+        .dark th {
+            background-color: #F87171;
+        }
+        .company-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .company-row:hover {
+            background-color: #f0f0f0;
+        }
+        .dark .company-row:hover {
+            background-color: #374151;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center mb-4">
+                    <button id="refresh" class="p-2 bg-transparent hover:bg-orange-200 dark:hover:bg-orange-700 rounded ml-4">
+                        <img src="/static/icons/refresh.svg" class="w-8 h-8" alt="رفرش">
+                    </button>
+                    <input type="text" id="search" class="flex-grow px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 bg-white dark:bg-gray-100 text-gray-800 dark:text-gray-800" placeholder="جستجو بر اساس نام یا شناسه ملی...">
+                </div>
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-2">شناسه ملی</th>
+                            <th class="p-2">نام شرکت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="company-table"></tbody>
+                </table>
+                <div class="flex justify-center mt-4">
+                    <button id="back" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition">بازگشت</button>
+                </div>
+            </div>
+        </main>
+
+        <div id="section-modal" class="modal fixed inset-0 items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">انتخاب بخش</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">لطفاً بخش موردنظر را انتخاب کنید:</p>
+                <div class="space-y-2">
+                    <a id="update-link" href="#" class="block p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-700 text-gray-800 dark:text-gray-100">بروزرسانی شرکت</a>
+                    <a id="financial-link" href="#" class="block p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-700 text-gray-800 dark:text-gray-100">وضعیت مالی</a>
+                    <a id="guarantee-link" href="#" class="block p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-700 text-gray-800 dark:text-gray-100">تضامین</a>
+                    <a id="social-link" href="#" class="block p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-700 text-gray-800 dark:text-gray-100">بیمه تأمین اجتماعی</a>
+                    <a id="report-link" href="#" class="block p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-700 text-gray-800 dark:text-gray-100">گزارش</a>
+                </div>
+                <button id="close-modal" class="mt-4 w-full bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition">بستن</button>
+            </div>
+        </div>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/new-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+            const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+            const contentWrapper = document.getElementById('content-wrapper');
+            const searchInput = document.getElementById('search');
+            const refreshBtn = document.getElementById('refresh');
+            const backBtn = document.getElementById('back');
+            const tableBody = document.getElementById('company-table');
+            const sectionModal = document.getElementById('section-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const updateLink = document.getElementById('update-link');
+            const financialLink = document.getElementById('financial-link');
+            const guaranteeLink = document.getElementById('guarantee-link');
+            const socialLink = document.getElementById('social-link');
+            const reportLink = document.getElementById('report-link');
+            let selectedCompanyId = null;
+
+            // Escape HTML to prevent XSS
+            const escapeHtml = (unsafe) => {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            };
+
+            // Check login status
+            const checkLogin = async () => {
+                try {
+                    const response = await fetch('/api/check-login', {
+                        credentials: 'include'
+                    });
+                    if (response.status === 401) {
+                        Toastify({
+                            text: "لطفاً ابتدا وارد شوید",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "center",
+                            style: {
+                                background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                            },
+                        }).showToast();
+                        window.location.href = '/login';
+                    } else if (!response.ok) {
+                        throw new Error('خطای شبکه');
+                    }
+                } catch (error) {
+                    console.error('Login check failed:', error);
+                    Toastify({
+                        text: "خطا در بررسی وضعیت ورود: " + error.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "center",
+                        style: {
+                            background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                        },
+                    }).showToast();
+                    window.location.href = '/login';
+                }
+            };
+
+            // Initialize sidebar state
+            const initSidebar = () => {
+                // Always start with sidebar hidden regardless of screen size
+                sidebar.classList.add('sidebar-hidden');
+                contentWrapper.classList.remove('content-shrunk');
+                toggleSidebarClosed.style.display = 'block';
+                toggleSidebarOpen.style.display = 'none';
+            };
+
+            // Toggle sidebar
+            const toggleSidebar = () => {
+                sidebar.classList.toggle('sidebar-hidden');
+                if (window.innerWidth >= 768) {
+                    contentWrapper.classList.toggle('content-shrunk');
+                }
+                if (sidebar.classList.contains('sidebar-hidden')) {
+                    toggleSidebarClosed.style.display = 'block';
+                    toggleSidebarOpen.style.display = 'none';
+                } else {
+                    toggleSidebarClosed.style.display = 'none';
+                    toggleSidebarOpen.style.display = 'block';
+                }
+            };
+
+            // Handle window resize
+            const handleResize = () => {
+                if (window.innerWidth >= 768) {
+                    if (!sidebar.classList.contains('sidebar-hidden')) {
+                        contentWrapper.classList.add('content-shrunk');
+                    } else {
+                        contentWrapper.classList.remove('content-shrunk');
+                    }
+                } else {
+                    contentWrapper.classList.remove('content-shrunk');
+                }
+            };
+
+            // Load companies data
+            const loadCompanies = async (searchTerm = '') => {
+                try {
+                    // Show loading state
+                    tableBody.innerHTML = '<tr><td colspan="2" class="p-2 text-center">در حال بارگذاری...</td></tr>';
+                    const response = await fetch(`/api/projects/${searchTerm ? `?search=${searchTerm}` : ''}`, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include'
+                    });
+                    if (!response.ok) {
+                        const contentType = response.headers.get("content-type");
+                        let errorDetail = 'خطا در بارگذاری شرکت‌ها';
+                        if (contentType && contentType.includes("application/json")) {
+                            const errorData = await response.json();
+                            errorDetail = errorData.detail || JSON.stringify(errorData);
+                            if (response.status === 401) {
+                                Toastify({
+                                    text: "لطفاً ابتدا وارد شوید",
+                                    duration: 3000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "center",
+                                    style: {
+                                        background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                    },
+                                }).showToast();
+                                window.location.href = '/login';
+                                return;
+                            }
+                        } else {
+                            const text = await response.text();
+                            errorDetail = `خطای سرور: ${response.status} ${response.statusText}. پاسخ غیر JSON: ${text.substring(0, 200)}...`;
+                        }
+                        throw new Error(errorDetail);
+                    }
+                    const data = await response.json();
+                    const uniqueCompanies = Array.from(new Map(data.map(item => [item.company_id, item])).values());
+                    renderCompanies(uniqueCompanies);
+                } catch (error) {
+                    console.error('Error loading companies:', error);
+                    Toastify({
+                        text: error.message || "خطا در بارگذاری شرکت‌ها!",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "center",
+                        style: {
+                            background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                        },
+                    }).showToast();
+                    tableBody.innerHTML = '<tr><td colspan="2" class="p-2 text-center text-red-500">خطا در بارگذاری داده‌ها</td></tr>';
+                }
+            };
+
+            // Render companies to table
+            const renderCompanies = (companies) => {
+                tableBody.innerHTML = '';
+                companies.forEach(company => {
+                    const row = document.createElement('tr');
+                    row.classList.add('company-row');
+                    row.innerHTML = `
+                        <td class="p-2 text-gray-800 dark:text-gray-100">${escapeHtml(company.company_id)}</td>
+                        <td class="p-2 text-gray-800 dark:text-gray-100">${escapeHtml(company.company_name)}</td>
+                    `;
+                    row.addEventListener('click', () => {
+                        selectedCompanyId = company.company_id;
+                        // Update all links with the selected company ID
+                        updateLink.href    = `/new-project?company_id=${selectedCompanyId}&mode=edit`;
+                        // هم path و هم query را می‌فرستیم تا صفحهٔ مقصد هر کدام را که خواند، مقدار داشته باشد
+                        financialLink.href = `/financial-details/${selectedCompanyId}?company_id=${selectedCompanyId}`;
+                        guaranteeLink.href = `/guarantees?company_id=${selectedCompanyId}`;
+                        socialLink.href    = `/social-security?company_id=${selectedCompanyId}`;
+                        reportLink.href    = `/reports?company_id=${selectedCompanyId}`;
+
+                        sectionModal.classList.add('modal-open');
+                    });
+                    row.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        navigator.clipboard.writeText(company.company_id)
+                            .then(() => {
+                                Toastify({
+                                    text: "شناسه ملی کپی شد!",
+                                    duration: 2000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "center",
+                                    style: {
+                                        background: "linear-gradient(to right, #00b09b, #96c93d)",
+                                    },
+                                }).showToast();
+                            })
+                            .catch(err => {
+                                console.error('Could not copy text: ', err);
+                                Toastify({
+                                    text: "خطا در کپی کردن شناسه ملی",
+                                    duration: 3000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "center",
+                                    style: {
+                                        background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                    },
+                                }).showToast();
+                            });
+                    });
+                    tableBody.appendChild(row);
+                });
+            };
+
+            // Filter companies based on search input
+            const filterCompanies = () => {
+                const searchTerm = searchInput.value.trim();
+                loadCompanies(searchTerm);
+            };
+
+            // Handle back button click
+            const handleBackButton = () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                window.location.href = urlParams.get('select') === 'true' ? '/new-project' : '/';
+            };
+
+            // Initialize dark mode
+            const initDarkMode = () => {
+                if (localStorage.getItem('darkMode') === 'enabled') {
+                    document.documentElement.classList.add('dark');
+                }
+            };
+
+            // Initialize modal events
+            const initModalEvents = () => {
+                closeModalBtn.addEventListener('click', () => {
+                    sectionModal.classList.remove('modal-open');
+                });
+                
+                // Close modal when clicking on any link
+                const modalLinks = [updateLink, financialLink, guaranteeLink, socialLink, reportLink];
+                modalLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        sectionModal.classList.remove('modal-open');
+                    });
+                });
+            };
+
+            // Highlight current page in sidebar
+            const highlightCurrentPage = () => {
+                const currentPath = window.location.pathname;
+                const navLinks = document.querySelectorAll('#sidebar nav a');
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === currentPath) {
+                        link.classList.add('bg-green-700');
+                    } else {
+                        link.classList.remove('bg-green-700');
+                    }
+                });
+            };
+
+            // Initialize the page
+            const init = () => {
+                checkLogin();
+                initSidebar();
+                initDarkMode();
+                initModalEvents();
+                highlightCurrentPage();
+                loadCompanies();
+
+                toggleSidebarOpen.addEventListener('click', toggleSidebar);
+                toggleSidebarClosed.addEventListener('click', toggleSidebar);
+                window.addEventListener('resize', handleResize);
+                searchInput.addEventListener('input', filterCompanies);
+                refreshBtn.addEventListener('click', () => loadCompanies());
+                backBtn.addEventListener('click', handleBackButton);
+            };
+
+            init();
+        });
+    </script>
+</body>
+</html>

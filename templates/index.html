@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden; /* Prevent horizontal scroll when content shrinks */
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed; /* Ensure sidebar stays in place */
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem; /* Smaller sidebar width: w-56 */
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10; /* Ensure content is above the body background but below sidebar when open */
+        }
+        .content-shrunk {
+            transform: scale(0.95); /* Shrink content */
+            margin-right: 14rem; /* Adjust based on new sidebar width */
+            opacity: 0.7; /* Make content transparent when sidebar is open */
+            pointer-events: none; /* Disable interaction with content when sidebar is open */
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1); /* No shrinking on small screens */
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+
+        /* Styles for the toggle button based on sidebar state */
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60; /* Above sidebar */
+            display: none; /* Hidden by default */
+        }
+        #toggle-sidebar-closed {
+            position: fixed; /* Fixed position relative to viewport */
+            top: 1rem;
+            right: 1rem;
+            z-index: 40; /* Below sidebar, above content */
+        }
+        .sidebar-hidden #toggle-sidebar-open {
+            display: none; /* Hide open button when sidebar is hidden */
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block; /* Show open button when sidebar is visible */
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block; /* Show close button when sidebar is hidden */
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none; /* Hide close button when sidebar is visible */
+        }
+
+        /* Increased icon size */
+        .sidebar img {
+            width: 32px; /* w-8 */
+            height: 32px; /* h-8 */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">خوش آمدید!</h2>
+                <p class="text-gray-600 dark:text-gray-300">از منوی کناری، بخش موردنظر خود را انتخاب کنید تا به مدیریت پروژه‌های خود بپردازید.</p>
+            </div>
+        </main>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/add-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+        const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+        const contentWrapper = document.getElementById('content-wrapper');
+
+        // Check if user is logged in (حذف localStorage و استفاده از session)
+        // اصلاح تابع checkLogin
+        const checkLogin = async () => {
+            try {
+                const response = await fetch('/api/check-login', {
+                    credentials: 'include'  // این خط مهم است
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                } else if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        };
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('sidebar-hidden');
+            if (window.innerWidth >= 768) {
+                contentWrapper.classList.toggle('content-shrunk');
+            }
+        }
+
+        toggleSidebarOpen.addEventListener('click', toggleSidebar);
+        toggleSidebarClosed.addEventListener('click', toggleSidebar);
+        sidebar.classList.add('sidebar-hidden');
+        contentWrapper.classList.remove('content-shrunk');
+
+
+        // Responsive sidebar handling
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                // If sidebar is currently hidden on large screens, make it visible and shrink content
+                if (sidebar.classList.contains('sidebar-hidden')) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    contentWrapper.classList.add('content-shrunk');
+                }
+            } else {
+                // On small screens, always hide sidebar and unshrink content
+                sidebar.classList.add('sidebar-hidden');
+                contentWrapper.classList.remove('content-shrunk');
+            }
+        });
+
+
+        // Initial sidebar state on page load
+        if (window.innerWidth >= 768) {
+            sidebar.classList.remove('sidebar-hidden');
+            contentWrapper.classList.add('content-shrunk');
+        } else {
+            sidebar.classList.add('sidebar-hidden');
+            contentWrapper.classList.remove('content-shrunk');
+        }
+    </script>
+</body>
+</html>

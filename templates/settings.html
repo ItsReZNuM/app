@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنظیمات - سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: none;
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+        }
+        .sidebar-hidden #toggle-sidebar-open {
+            display: none;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block;
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none;
+        }
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .modal {
+            display: none;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .modal-open {
+            display: flex;
+        }
+        .error-message {
+            color: #E53935;
+            display: none;
+        }
+        .dark .error-message {
+            color: #F87171;
+        }
+        .modal-content-scroll {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">تنظیمات</h2>
+                <p class="text-center text-gray-600 dark:text-gray-300 mb-4">نسخه 3.6.9</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رمز عبور جدید</label>
+                        <input type="password" id="password" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="رمز عبور جدید را وارد کنید">
+                        <p id="password-error" class="error-message text-sm mt-1">رمز عبور باید حداقل ۶ کاراکتر باشد!</p>
+                    </div>
+                    <button id="save-password" class="w-full bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition">ذخیره</button>
+
+                    <div class="flex items-center justify-between">
+                        <label for="dark-mode" class="text-sm font-medium text-gray-700 dark:text-gray-300">حالت تاریک</label>
+                        <input type="checkbox" id="dark-mode" class="h-6 w-12 rounded-full bg-gray-300 dark:bg-gray-600 relative appearance-none cursor-pointer before:absolute before:h-6 before:w-6 before:rounded-full before:bg-white before:shadow before:transition-transform before:duration-300 before:transform dark:before:translate-x-6">
+                    </div>
+
+                    <button id="show-intro" class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-500 dark:hover:bg-gray-400 transition">نمایش توضیحات برنامه</button>
+                </div>
+            </div>
+        </main>
+
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/new-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <div id="intro-modal" class="modal fixed inset-0 items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full modal-content-scroll">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">توضیحات برنامه</h3>
+            <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                کاربر گرامی،<br>
+                به سیستم مدیریت پروژه‌های عمرانی (سمپ) خوش آمدید! این برنامه با تلاش و دقت فراوان توسط حسین محمدی کیا طراحی شده تا ابزاری کارآمد و قابل اعتماد برای مدیریت پروژه‌های عمرانی در اختیار شما قرار بدهد. ما امیدواریم که این سیستم بتواند به بهبود فرآیندها و افزایش بهره‌وری در استانداری لرستان کمک کند و تجربه‌ای مثبت برای شما به ارمغان بیاورد.<br><br>
+                <strong>مشخصات برنامه:</strong><br>
+                این نرم‌افزار به‌طور اختصاصی برای استانداری لرستان توسعه یافته و تمامی حقوق مادی و معنوی آن متعلق به سازنده، حسین محمدی کیا، است. هرگونه استفاده، انتقال یا انتشار این برنامه بدون هماهنگی کتبی با سازنده ممنوع بوده و پیگرد قانونی خواهد داشت.<br><br>
+                <strong>نکات مهم:</strong><br>
+                - لطفاً پس از تهیه هرگونه گزارش، تمامی اطلاعات و خروجی‌ها را با دقت بررسی کنید تا از صحت آن‌ها اطمینان حاصل شود. این برنامه به‌عنوان ابزاری کمکی طراحی شده و مسئولیت نهایی تأیید اطلاعات بر عهده کاربر محترم است.<br>
+                - سازنده این نرم‌افزار هیچ‌گونه مسئولیتی در قبال خطاهای احتمالی ناشی از استفاده نادرست یا تفسیر داده‌ها بر عهده ندارد.<br>
+                - همچنین، پشتیبانی مداوم یا به‌روزرسانی‌های بعدی این برنامه خارج از تعهدات سازنده بوده و هرگونه نیاز به پشتیبانی باید به‌صورت جداگانه هماهنگ شود.<br><br>
+                از شما دعوت می‌کنیم با استفاده مسئولانه و دقیق از این سیستم، بهترین نتیجه را برای پروژه‌های خود رقم بزنید. با آرزوی موفقیت برای شما و مجموعه استانداری لرستان!<br><br>
+                با احترام،<br>
+                حسین محمدی کیا<br>
+                طراح و توسعه‌دهنده<br>
+                زمستان ۱۴۰۳
+            </p>
+            <button id="close-modal" class="mt-4 w-full bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition">بستن</button>
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+        const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+        const contentWrapper = document.getElementById('content-wrapper');
+        const passwordInput = document.getElementById('password');
+        const savePasswordBtn = document.getElementById('save-password');
+        const passwordError = document.getElementById('password-error');
+        const darkModeToggle = document.getElementById('dark-mode');
+        const introModal = document.getElementById('intro-modal');
+        const showIntroBtn = document.getElementById('show-intro');
+        const closeModalBtn = document.getElementById('close-modal');
+
+        // Check if user is logged in
+        const checkLogin = async () => {
+            try {
+                const response = await fetch('/api/check-login', {
+                    credentials: 'include'  // این خط مهم است
+                });
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                } else if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        };
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.documentElement.classList.add('dark');
+            darkModeToggle.checked = true;
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('sidebar-hidden');
+            if (window.innerWidth >= 768) {
+                contentWrapper.classList.toggle('content-shrunk');
+            }
+        }
+
+        toggleSidebarOpen.addEventListener('click', toggleSidebar);
+        toggleSidebarClosed.addEventListener('click', toggleSidebar);
+
+        // Responsive sidebar handling
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                if (sidebar.classList.contains('sidebar-hidden')) {
+                    sidebar.classList.remove('sidebar-hidden');
+                    contentWrapper.classList.add('content-shrunk');
+                }
+            } else {
+                sidebar.classList.add('sidebar-hidden');
+                contentWrapper.classList.remove('content-shrunk');
+            }
+        });
+
+        // Initial sidebar state on page load
+        if (window.innerWidth >= 768) {
+            sidebar.classList.remove('sidebar-hidden');
+            contentWrapper.classList.add('content-shrunk');
+        } else {
+            sidebar.classList.add('sidebar-hidden');
+            contentWrapper.classList.remove('content-shrunk');
+        }
+
+        // Save password
+        savePasswordBtn.addEventListener('click', () => {
+            const newPassword = passwordInput.value.trim();
+            if (!newPassword) {
+                passwordError.textContent = 'رمز عبور نمی‌تواند خالی باشد!';
+                passwordError.style.display = 'block';
+                return;
+            }
+            if (newPassword.length < 6) {
+                passwordError.textContent = 'رمز عبور باید حداقل ۶ کاراکتر باشد!';
+                passwordError.style.display = 'block';
+                return;
+            }
+            localStorage.setItem('appPassword', newPassword);
+            passwordError.style.display = 'none';
+            alert('رمز عبور با موفقیت تغییر کرد!');
+            passwordInput.value = '';
+        });
+
+        // Toggle dark mode
+        darkModeToggle.addEventListener('change', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', darkModeToggle.checked ? 'enabled' : 'disabled');
+        });
+
+        // Show/hide intro modal
+        showIntroBtn.addEventListener('click', () => {
+            introModal.classList.add('modal-open');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            introModal.classList.remove('modal-open');
+        });
+    </script>
+</body>
+</html>

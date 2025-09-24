@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وضعیت مالی - سامانه مدیریت پروژه</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@tailwindcss/rtl@0.2.0/dist/tailwind-rtl.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Dana';
+            src: url('/static/fonts/Dana.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Dana', sans-serif;
+            background: linear-gradient(to bottom, #1A3C34, #2E7D32);
+            overflow-x: hidden;
+        }
+        .dark body {
+            background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
+        }
+        .sidebar {
+            background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
+            border-left: 2px solid #DDE4E8;
+            transition: transform 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            z-index: 50;
+            width: 14rem;
+        }
+        .dark .sidebar {
+            background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
+            border-left: 2px solid #4B5563;
+        }
+        .sidebar-hidden {
+            transform: translateX(100%);
+        }
+        .content-container {
+            transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            position: relative;
+            z-index: 10;
+        }
+        .content-shrunk {
+            transform: scale(0.95);
+            margin-right: 14rem;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .content-shrunk {
+                margin-right: 0;
+                transform: scale(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        #toggle-sidebar-open {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 60;
+            display: none;
+        }
+        #toggle-sidebar-closed {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 40;
+        }
+        .sidebar-hidden #toggle-sidebar-open {
+            display: none;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
+            display: block;
+        }
+        .sidebar-hidden #toggle-sidebar-closed {
+            display: block;
+        }
+        .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
+            display: none;
+        }
+        .sidebar img {
+            width: 32px;
+            height: 32px;
+        }
+        .error-message {
+            color: #E53935;
+            display: none;
+        }
+        .dark .error-message {
+            color: #F87171;
+        }
+        .modal {
+            display: none;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .modal-open {
+            display: flex;
+        }
+        table {
+            background-color: white;
+            border: 2px solid #F4511E;
+            border-radius: 8px;
+        }
+        th {
+            background-color: #F4511E;
+            color: white;
+            padding: 6px;
+        }
+        .dark table {
+            background-color: #1F2937;
+            border-color: #F87171;
+        }
+        .dark th {
+            background-color: #F87171;
+        }
+        .readonly {
+            background-color: #F0F0F0 !important;
+            cursor: not-allowed;
+        }
+        .dark .readonly {
+            background-color: #374151 !important;
+        }
+        /* اضافه کردن این استایل به بخش <style> */
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .disabled-btn {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="content-wrapper" class="flex-grow flex flex-col content-container">
+        <!-- Header -->
+        <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
+            <h1 class="text-xl font-bold">سامانه مدیریت پروژه</h1>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-grow p-6">
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg" id="initial-form">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">وضعیت مالی</h2>
+                <form id="initial-form-data" class="space-y-4">
+                    <div>
+                        <label for="company_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شناسه ملی شرکت</label>
+                        <input type="text" id="company_id" name="company_id" value="{{ company_id }}" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                        <p id="company_id-error" class="error-message text-sm mt-1">شناسه ملی نمی‌تواند خالی باشد!</p>
+                    </div>
+                    <div>
+                        <label for="company_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نام شرکت</label>
+                        <input type="text" id="company_name" name="company_name" value="{{ company_name }}" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="نام شرکت">
+                        <p id="company_name-error" class="error-message text-sm mt-1">نام شرکت نمی‌تواند خالی باشد!</p>
+                    </div>
+                    <button type="button" id="select-company" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 dark:hover:bg-blue-400 transition">انتخاب از لیست شرکت‌ها</button>
+                    <div>
+                        <label for="record_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره ردیف</label>
+                        <select id="record_number" name="record_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <option value="new">ثبت جدید</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="stage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مرحله</label>
+                        <select id="stage" name="stage" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <option value="new">مرحله جدید</option>
+                        </select>
+                    </div>
+                    <!-- جایگزین دو <div class="flex justify-between"> ...> با نسخه‌ی تمیزتر: -->
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                    <button type="button" id="confirm"
+                        class="text-sm px-3 py-2 bg-green-800 text-white rounded-md hover:bg-green-700 transition">تأیید</button>
+
+                    <button type="button" id="view-stages"
+                        class="text-sm px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition">مشاهده مراحل</button>
+
+                    <button type="button" id="delete-record"
+                        class="text-sm px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition disabled-btn"
+                        disabled>حذف ردیف</button>
+
+                    <button type="button" id="back"
+                        class="text-sm px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition">بازگشت</button>
+                    </div>
+
+                </form>
+            </div>
+
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg hidden" id="financial-form">
+                <h2 id="financial-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6"></h2>
+                <form id="financial-form-data" class="space-y-4">
+                    <div id="fixed-fields" class="space-y-4">
+                        <div>
+                            <label for="invoice_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره صورت‌وضعیت</label>
+                            <input type="text" id="invoice_number" name="invoice_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره صورت‌وضعیت">
+                        </div>
+                        <div>
+                            <label for="invoice_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نوع صورت‌وضعیت</label>
+                            <select id="invoice_type" name="invoice_type" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                                <option value="پیش‌پرداخت">پیش‌پرداخت</option>
+                                <option value="علی‌الحساب">علی‌الحساب</option>
+                                <option value="موقت">موقت</option>
+                                <option value="قطعی">قطعی</option>
+                                <option value="تعدیل">تعدیل</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="invoice_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ صورت‌وضعیت</label>
+                            <input type="text" id="invoice_amount" name="invoice_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ صورت‌وضعیت (ریال)">
+                        </div>
+                        <div>
+                            <label for="allocation_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ تخصیص</label>
+                            <input type="text" id="allocation_amount" name="allocation_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ تخصیص (ریال)">
+                        </div>
+                        <div>
+                            <label for="request_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره نامه درخواست</label>
+                            <input type="text" id="request_number" name="request_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره نامه درخواست">
+                        </div>
+                        <div>
+                            <label for="request_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ نامه درخواست</label>
+                            <input type="text" id="request_date" name="request_date" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="YYYY-MM-DD">
+                        </div>
+                        <div>
+                            <label for="request_result" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نتیجه درخواست</label>
+                            <select id="request_result" name="request_result" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                                <option value="تایید شده">تایید شده</option>
+                                <option value="تایید نشده">تایید نشده</option>
+                                <option value="درحال بررسی">درحال بررسی</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="settlement_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300">روش تسویه</label>
+                            <select id="settlement_method" name="settlement_method" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                                <option value="نقد">نقد</option>
+                                <option value="اسناد خزانه">اسناد خزانه</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="variable-fields" class="space-y-4">
+                        <div>
+                            <label for="paid_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ پرداخت‌شده</label>
+                            <input type="text" id="paid_amount" name="paid_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ پرداخت‌شده (ریال)">
+                        </div>
+                        <div>
+                            <label for="advance_amortization" class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک پیش‌پرداخت</label>
+                            <input type="text" id="advance_amortization" name="advance_amortization" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="استهلاک پیش‌پرداخت (ریال)">
+                        </div>
+                        <div>
+                            <label for="partial_amortization" class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک علی‌الحساب</label>
+                            <input type="text" id="partial_amortization" name="partial_amortization" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="استهلاک علی‌الحساب (ریال)">
+                        </div>
+                    </div>
+                    <div id="calc-fields" class="space-y-4">
+                        <div>
+                            <label for="remaining_invoice" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده صورت‌وضعیت</label>
+                            <input type="text" id="remaining_invoice" name="remaining_invoice" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label for="remaining_advance" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده پیش‌پرداخت</label>
+                            <input type="text" id="remaining_advance" name="remaining_advance" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label for="remaining_partial" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده علی‌الحساب</label>
+                            <input type="text" id="remaining_partial" name="remaining_partial" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label for="contractor_credit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">بستانکاری پیمانکار</label>
+                            <input type="text" id="contractor_credit" name="contractor_credit" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label for="contractor_debit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">بدهکاری پیمانکار</label>
+                            <input type="text" id="contractor_debit" name="contractor_debit" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label for="total_paid_invoices" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مجموع مبالغ پرداخت‌شده</label>
+                            <input type="text" id="total_paid_invoices" name="total_paid_invoices" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                        </div>
+                    </div>
+                    <!-- جایگزین <div class="flex justify-between"> سه‌گانه دکمه‌ها: -->
+                    <div class="grid grid-cols-3 gap-2 mt-4">
+                    <button type="button" id="save"
+                        class="text-sm px-3 py-2 bg-green-800 text-white rounded-md hover:bg-green-700 transition">ذخیره</button>
+
+                    <button type="button" id="save-continue"
+                        class="text-sm px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 transition">ذخیره و ادامه</button>
+
+                    <button type="button" id="back-financial"
+                        class="text-sm px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition">بازگشت</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer id="footer" class="bg-green-800 text-white p-4 text-center">
+            <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 right-0 h-full w-64 sidebar z-50 md:w-56 sidebar-hidden">
+        <div class="p-4">
+            <button id="toggle-sidebar-open" class="p-2 focus:outline-none">
+                <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="بستن منو">
+            </button>
+            <h2 class="text-lg font-bold text-gray-100 mt-4">منو</h2>
+            <nav class="mt-4 space-y-2">
+                <a href="/" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/home.svg" class="ml-2" alt="خانه">
+                    <span class="text-gray-100">خانه</span>
+                </a>
+                <a href="/reminders" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/bell.svg" class="ml-2" alt="یادآوری‌ها">
+                    <span class="text-gray-100">یادآوری‌ها</span>
+                </a>
+                <a href="/add-project" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/briefcase.svg" class="ml-2" alt="ثبت شرکت">
+                    <span class="text-gray-100">ثبت شرکت</span>
+                </a>
+                <a href="/companies" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/building.svg" class="ml-2" alt="لیست شرکت‌ها">
+                    <span class="text-gray-100">لیست شرکت‌ها</span>
+                </a>
+                <a href="/reports" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/chart-bar.svg" class="ml-2" alt="گزارش‌ها">
+                    <span class="text-gray-100">گزارش‌ها</span>
+                </a>
+                <a href="/settings" class="flex items-center p-2 rounded-lg hover:bg-green-700">
+                    <img src="/static/icons/settings.svg" class="ml-2" alt="تنظیمات">
+                    <span class="text-gray-100">تنظیمات</span>
+                </a>
+            </nav>
+
+        </div>
+    </aside>
+
+    <button id="toggle-sidebar-closed" class="p-2 focus:outline-none">
+        <img src="/static/icons/menu-2.svg" class="w-6 h-6 menu-icon" alt="باز کردن منو">
+    </button>
+
+    <!-- Stages Modal -->
+    <div id="stages-modal" class="modal fixed inset-0 items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-4xl w-full">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">مراحل صورت‌وضعیت</h3>
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr>
+                        <th class="p-2">مرحله</th>
+                        <th class="p-2">شماره صورت‌وضعیت</th>
+                        <th class="p-2">نوع صورت‌وضعیت</th>
+                        <th class="p-2">مبلغ صورت‌وضعیت</th>
+                        <th class="p-2">مبلغ پرداخت‌شده</th>
+                        <th class="p-2">تاریخ درخواست</th>
+                        <th class="p-2">نتیجه درخواست</th>
+                        <th class="p-2">حذف</th>
+                    </tr>
+                </thead>
+                <tbody id="stages-table"></tbody>
+            </table>
+            <button id="close-stages-modal" class="mt-4 w-full bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition">بستن</button>
+        </div>
+    </div>
+
+
+    <script>
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarOpen = document.getElementById('toggle-sidebar-open');
+        const toggleSidebarClosed = document.getElementById('toggle-sidebar-closed');
+        const contentWrapper = document.getElementById('content-wrapper');
+        const initialForm = document.getElementById('initial-form');
+        const financialForm = document.getElementById('financial-form');
+        const financialFormData = document.getElementById('financial-form-data');
+        const companyIdInput = document.getElementById('company_id');
+        const companyNameInput = document.getElementById('company_name');
+        const recordNumberSelect = document.getElementById('record_number');
+        const stageSelect = document.getElementById('stage');
+        const selectCompanyBtn = document.getElementById('select-company');
+        const confirmBtn = document.getElementById('confirm');
+        const viewStagesBtn = document.getElementById('view-stages');
+        const deleteRecordBtn = document.getElementById('delete-record');
+        const backBtn = document.getElementById('back');
+        const saveBtn = document.getElementById('save');
+        const saveContinueBtn = document.getElementById('save-continue');
+        const backFinancialBtn = document.getElementById('back-financial');
+        const stagesModal = document.getElementById('stages-modal');
+        const stagesTable = document.getElementById('stages-table');
+        const closeStagesModal = document.getElementById('close-stages-modal');
+
+        let currentCompanyId = null;
+        let currentRecordNumber = null;
+        let currentStage = null;
+        let invoiceAmount = 0;
+
+        // Initialize the application
+        const init = () => {
+            checkLogin();
+            initSidebar();
+            initDarkMode();
+            initEventListeners();
+            handleUrlParameters();
+        };
+
+        // Check login status
+        const checkLogin = async () => {
+            try {
+                const response = await fetch('/api/check-login', {
+                    credentials: 'include'
+                });
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                } else if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        };
+
+        // Initialize sidebar - همیشه بسته شروع شود
+        const initSidebar = () => {
+            sidebar.classList.add('sidebar-hidden');
+            contentWrapper.classList.remove('content-shrunk');
+        };
+
+        // Initialize dark mode
+        const initDarkMode = () => {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.documentElement.classList.add('dark');
+            }
+        };
+
+        // تابع برای نرمال‌سازی اعداد فارسی/عربی به انگلیسی
+        const normalizeNumber = (value) => {
+            if (!value) return '';
+            
+            // تبدیل ارقام فارسی و عربی به انگلیسی
+            const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            
+            let normalized = value.toString();
+            
+            // جایگزینی ارقام فارسی
+            persianNumbers.forEach((num, index) => {
+                normalized = normalized.replace(new RegExp(num, 'g'), index);
+            });
+            
+            // جایگزینی ارقام عربی
+            arabicNumbers.forEach((num, index) => {
+                normalized = normalized.replace(new RegExp(num, 'g'), index);
+            });
+            
+            // حذف جداکننده‌ها (کاما و جداکننده فارسی)
+            normalized = normalized.replace(/[,،]/g, '');
+            
+            return normalized;
+        };
+
+
+        // Initialize event listeners
+        const initEventListeners = () => {
+            toggleSidebarOpen.addEventListener('click', toggleSidebar);
+            toggleSidebarClosed.addEventListener('click', toggleSidebar);
+            window.addEventListener('resize', handleResize);
+
+            // Numeric fields formatting
+            ['invoice_amount', 'allocation_amount', 'paid_amount', 'advance_amortization', 'partial_amortization'].forEach(field => {
+                const input = document.getElementById(field);
+                if (input) {
+                    input.addEventListener('input', formatNumericInput);
+                }
+            });
+
+            // اضافه کردن event listeners با استفاده از نسخه غیرفعال‌کننده
+            companyIdInput.addEventListener('input', handleCompanyIdInput);
+            companyNameInput.addEventListener('input', handleCompanyNameInput);
+            recordNumberSelect.addEventListener('change', handleRecordNumberChange);
+            selectCompanyBtn.addEventListener('click', () => window.location.href = '/companies?select=true');
+            confirmBtn.addEventListener('click', handleConfirm);
+            viewStagesBtn.addEventListener('click', handleViewStages);
+            deleteRecordBtn.addEventListener('click', handleDeleteRecord);
+            backBtn.addEventListener('click', () => window.location.href = '/');
+            backFinancialBtn.addEventListener('click', handleBackFinancial);
+            saveBtn.addEventListener('click', () => saveFinancialData(true));
+            saveContinueBtn.addEventListener('click', () => saveFinancialData(false));
+            closeStagesModal.addEventListener('click', () => stagesModal.classList.remove('modal-open'));
+        };
+
+        const softResetCompanyFields = () => {
+            recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
+            stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
+            deleteRecordBtn.disabled = true;
+        };
+
+
+
+        // تابع جدید برای بارگذاری اطلاعات شرکت
+        const loadCompanyInfo = async (companyId) => {
+            try {
+                const response = await fetch(`/projects/${companyId}`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    // غیرفعال کردن event listener موقتاً برای جلوگیری از حلقه
+                    companyNameInput.removeEventListener('input', handleCompanyNameInput);
+                    companyNameInput.value = data.company_name || '';
+                    companyNameInput.addEventListener('input', handleCompanyNameInput);
+                    
+                    await updateRecordNumbers(companyId);
+                    deleteRecordBtn.disabled = false;
+                } else {
+                    resetCompanyFields();
+                }
+            } catch (error) {
+                console.error('Error fetching company:', error);
+                resetCompanyFields();
+            }
+        };
+
+        // Handle URL parameters
+        // Handle URL parameters (with path fallback)
+        const handleUrlParameters = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            let cid = urlParams.get('company_id');
+
+            if (!cid) {
+                // اگر پارامتر Query نبود، از مسیر /financial-details/{company_id} بردار
+                const segs = window.location.pathname.split('/').filter(Boolean);
+                const idx = segs.indexOf('financial-details');
+                if (idx !== -1 && segs[idx + 1]) {
+                    cid = segs[idx + 1];
+                }
+            }
+
+            if (cid) {
+                // جلوگیری از ایجاد حلقه بی‌پایان
+                companyIdInput.removeEventListener('input', handleCompanyIdInput);
+                companyIdInput.value = cid;
+                companyIdInput.addEventListener('input', handleCompanyIdInput);
+                
+                // بارگذاری اطلاعات شرکت
+                loadCompanyInfo(cid);
+            }
+        };
+
+
+        // Toggle sidebar
+        const toggleSidebar = () => {
+            sidebar.classList.toggle('sidebar-hidden');
+            if (window.innerWidth >= 768) {
+                contentWrapper.classList.toggle('content-shrunk');
+            }
+        };
+
+        // Handle window resize
+        const handleResize = () => {
+            if (window.innerWidth >= 768 && !sidebar.classList.contains('sidebar-hidden')) {
+                contentWrapper.classList.add('content-shrunk');
+            } else {
+                contentWrapper.classList.remove('content-shrunk');
+            }
+        };
+
+        // Format numeric input
+        const formatNumericInput = (e) => {
+            const input = e.target;
+            let value = normalizeNumber(input.value);
+            
+            if (value && !isNaN(value)) {
+                input.value = parseFloat(value).toLocaleString('fa-IR');
+            }
+        };
+
+        // Handle company ID input
+        const handleCompanyIdInput = async () => {
+            const companyId = companyIdInput.value.trim();
+            if (!companyId) {
+                resetCompanyFields();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/projects/${companyId}`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    // غیرفعال کردن event listener موقتاً
+                    companyNameInput.removeEventListener('input', handleCompanyNameInput);
+                    companyNameInput.value = data.company_name || '';
+                    companyNameInput.addEventListener('input', handleCompanyNameInput);
+                    await updateRecordNumbers(companyId);
+                    deleteRecordBtn.disabled = false;
+                } else {
+                    resetCompanyFields();
+                }
+            } catch (error) {
+                console.error('Error fetching company:', error);
+                resetCompanyFields();
+            }
+        };
+
+        // Handle company name input
+        const handleCompanyNameInput = async () => {
+            const companyName = companyNameInput.value.trim();
+            if (!companyName) {
+                resetCompanyFields();
+                return;
+            }
+        };
+
+        // Reset company fields
+        const resetCompanyFields = () => {
+            companyNameInput.value = '';
+            recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
+            stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
+            deleteRecordBtn.disabled = true;
+        };
+
+        // Update record numbers - اصلاح با Array.from
+        const updateRecordNumbers = async (companyId) => {
+            try {
+                const response = await fetch(`/api/financial_info/${companyId}`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const payload = await response.json();
+                    const financialInfos = Array.isArray(payload) ? payload : (payload.items || []);
+                    const recordNumbers = Array.from(new Set(financialInfos.map(info => info.record_number)));
+
+                    recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
+                    recordNumbers.forEach(record => {
+                        const option = document.createElement('option');
+                        option.value = record;
+                        option.textContent = record;
+                        recordNumberSelect.appendChild(option);
+                    });
+
+                    await updateStages(companyId, recordNumberSelect.value);
+                } else {
+                    resetCompanyFields();
+                }
+
+            } catch (error) {
+                console.error('Error fetching records:', error);
+                resetCompanyFields();
+            }
+        };
+
+        // Handle record number change
+        const handleRecordNumberChange = async () => {
+            await updateStages(companyIdInput.value, recordNumberSelect.value);
+        };
+
+        // Update stages
+        const updateStages = async (companyId, recordNumber) => {
+            stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
+            if (recordNumber !== 'new') {
+                try {
+                    const response = await fetch(`/api/financial_info/${companyId}`, {
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        const payload = await response.json();
+                        const financialInfos = Array.isArray(payload) ? payload : (payload.items || []);
+                        const stages = financialInfos
+                            .filter(info => info.record_number === parseInt(recordNumber))
+                            .map(info => info.stage);
+                        stages.forEach(stage => {
+                            const option = document.createElement('option');
+                            option.value = stage;
+                            option.textContent = `مرحله ${stage}`;
+                            stageSelect.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching stages:', error);
+                }
+            }
+        };
+
+
+        const handleConfirm = async () => {
+            const companyId = companyIdInput.value.trim();
+            const recordNumber = recordNumberSelect.value;
+            const stage = stageSelect.value;
+
+            if (!companyId) {
+                document.getElementById('company_id-error').style.display = 'block';
+                return;
+            }
+
+            try {
+                // نمایش اسپینر یا حالت لودینگ
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span class="loading">در حال بررسی...</span>';
+
+                const [companyResponse, financialResponse] = await Promise.all([
+                    fetch(`/projects/${companyId}`, { credentials: 'include' }),
+                    recordNumber !== 'new' ? 
+                        fetch(`/api/financial_info/${companyId}`, { credentials: 'include' }) : 
+                        Promise.resolve({ ok: false })
+                ]);
+
+                if (!companyResponse.ok) {
+                    throw new Error('Company not found');
+                }
+
+                currentCompanyId = companyId;
+                currentRecordNumber = recordNumber === 'new' ? await getNextRecordNumber(companyId) : parseInt(recordNumber);
+                currentStage = stage === 'new' ? 1 : parseInt(stage);
+
+                // بارگذاری داده‌های مالی
+                await loadFinancialData(companyId, currentRecordNumber, currentStage);
+
+                // نمایش فرم مالی
+                initialForm.classList.add('hidden');
+                financialForm.classList.remove('hidden');
+                document.getElementById('financial-title').textContent = `مرحله ${currentStage} - ردیف ${currentRecordNumber}`;
+
+            } catch (error) {
+                console.error('Error confirming:', error);
+                alert('خطا در بارگذاری اطلاعات');
+            } finally {
+                // بازگرداندن دکمه به حالت عادی
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'تأیید';
+            }
+        };
+
+        // Get next record number
+        const getNextRecordNumber = async (companyId) => {
+            try {
+                const response = await fetch(`/api/financial_info/${companyId}`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const payload = await response.json();
+                    const financialInfos = Array.isArray(payload) ? payload : (payload.items || []);
+                    const recordNumbers = financialInfos.map(info => info.record_number);
+                    return recordNumbers.length > 0 ? Math.max(...recordNumbers) + 1 : 1;
+                }
+                return 1;
+
+            } catch (error) {
+                console.error('Error getting next record number:', error);
+                return 1;
+            }
+        };
+
+        // Load financial data - اصلاح شرط برای نمایش مقدار صفر
+        // Load financial data - اصلاح شرط برای حالت stage>1
+        const loadFinancialData = async (companyId, recordNumber, stage) => {
+            try {
+                clearFinancialForm(stage > 1); // غیرفعال نگه داشتن فیلدهای ثابت در مراحل بالاتر از ۱
+
+                const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stage}`, {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    const fixedFields = [
+                        'invoice_number', 'invoice_type', 'invoice_amount',
+                        'allocation_amount', 'request_number', 'request_date',
+                        'request_result', 'settlement_method'
+                    ];
+
+                    fixedFields.forEach(field => {
+                        const input = document.getElementById(field);
+                        if (input && (data[field] !== undefined && data[field] !== null)) {
+                            if (['invoice_amount', 'allocation_amount'].includes(field)) {
+                                input.value = parseFloat(data[field]).toLocaleString('fa-IR');
+                            } else {
+                                input.value = data[field];
+                            }
+                        }
+                    });
+
+                    const variableFields = ['paid_amount', 'advance_amortization', 'partial_amortization'];
+                    variableFields.forEach(field => {
+                        const input = document.getElementById(field);
+                        if (input && (data[field] !== undefined && data[field] !== null)) {
+                            input.value = parseFloat(data[field]).toLocaleString('fa-IR');
+                        }
+                    });
+
+                    calculateFields(data);
+
+                    if (stage > 1) {
+                        disableFixedFields();
+                    }
+                } else {
+                    // ⬅️ جدید: اگر مرحله فعلی وجود ندارد و stage>1 است، داده‌های ثابت را از مرحله 1 بخوان
+                    if (stage > 1) {
+                        await loadFixedData(companyId, recordNumber);
+                        disableFixedFields();
+                    } else {
+                        enableFixedFields();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading financial data:', error);
+            }
+        };
+
+
+        // Load fixed data - اصلاح شرط برای نمایش مقدار صفر
+        const loadFixedData = async (companyId, recordNumber) => {
+            try {
+                const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/1`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // پر کردن فیلدهای ثابت
+                    const fixedFields = [
+                        'invoice_number', 'invoice_type', 'invoice_amount', 
+                        'allocation_amount', 'request_number', 'request_date', 
+                        'request_result', 'settlement_method'
+                    ];
+                    
+                    fixedFields.forEach(field => {
+                        const input = document.getElementById(field);
+                        if (input && (data[field] !== undefined && data[field] !== null)) {
+                            // برای فیلدهای عددی، مقدار را به صورت فرمت شده نمایش بده
+                            if (['invoice_amount', 'allocation_amount'].includes(field)) {
+                                input.value = parseFloat(data[field]).toLocaleString('fa-IR');
+                            } else {
+                                input.value = data[field];
+                            }
+                        }
+                    });
+                    
+                    // غیرفعال کردن فیلدهای ثابت
+                    disableFixedFields();
+                }
+            } catch (error) {
+                console.error('Error loading fixed data:', error);
+            }
+        };
+
+        // Disable fixed fields
+        const disableFixedFields = () => {
+            const fixedFields = document.querySelectorAll('#fixed-fields input, #fixed-fields select');
+            fixedFields.forEach(field => {
+                field.disabled = true;
+                field.classList.add('readonly');
+            });
+        };
+
+        // Enable fixed fields
+        const enableFixedFields = () => {
+            const fixedFields = document.querySelectorAll('#fixed-fields input, #fixed-fields select');
+            fixedFields.forEach(field => {
+                field.disabled = false;
+                field.classList.remove('readonly');
+            });
+        };
+
+        // Clear financial form - اضافه کردن پارامتر keepFixedDisabled
+        const clearFinancialForm = (keepFixedDisabled = false) => {
+            const allFields = document.querySelectorAll('#financial-form-data input, #financial-form-data select');
+            allFields.forEach(field => {
+                if (!field.id.includes('remaining') && !field.id.includes('contractor') && !field.id.includes('total')) {
+                    field.value = '';
+                }
+            });
+            
+            // فعال کردن همه فیلدها
+            allFields.forEach(field => {
+                field.disabled = false;
+                field.classList.remove('readonly');
+            });
+            
+            // اگر پارامتر true باشد، فیلدهای ثابت را غیرفعال نگه دار
+            if (keepFixedDisabled) {
+                disableFixedFields();
+            }
+        };
+
+        // Calculate fields
+        const calculateFields = (data) => {
+            const invoiceAmount = parseFloat(data.invoice_amount) || 0;
+            const allocationAmount = parseFloat(data.allocation_amount) || 0;
+            const paidAmount = parseFloat(data.paid_amount) || 0;
+            const advanceAmortization = parseFloat(data.advance_amortization) || 0;
+            const partialAmortization = parseFloat(data.partial_amortization) || 0;
+
+            // محاسبات
+            const remainingInvoice = invoiceAmount - paidAmount;
+            const remainingAdvance = allocationAmount - advanceAmortization;
+            const remainingPartial = paidAmount - partialAmortization;
+            const contractorCredit = Math.max(0, paidAmount - invoiceAmount);
+            const contractorDebit = Math.max(0, invoiceAmount - paidAmount);
+            const totalPaidInvoices = paidAmount + advanceAmortization + partialAmortization;
+
+            // نمایش نتایج
+            document.getElementById('remaining_invoice').value = remainingInvoice.toLocaleString('fa-IR');
+            document.getElementById('remaining_advance').value = remainingAdvance.toLocaleString('fa-IR');
+            document.getElementById('remaining_partial').value = remainingPartial.toLocaleString('fa-IR');
+            document.getElementById('contractor_credit').value = contractorCredit.toLocaleString('fa-IR');
+            document.getElementById('contractor_debit').value = contractorDebit.toLocaleString('fa-IR');
+            document.getElementById('total_paid_invoices').value = totalPaidInvoices.toLocaleString('fa-IR');
+        };
+
+        // Handle back financial
+        const handleBackFinancial = () => {
+            financialForm.classList.add('hidden');
+            initialForm.classList.remove('hidden');
+        };
+
+        // Save financial data - اصلاح برای عدم جهش در حالت PUT
+        // Save financial data - اصلاح برای عدم جهش در حالت PUT و ارسال فیلدهای disabled
+        const saveFinancialData = async (isFinalSave) => {
+            try {
+                // ⚠️ FormData فیلدهای disabled را ارسال نمی‌کند؛ پس خودمان دستی می‌خوانیم
+                const getVal = (id) => {
+                    const el = document.getElementById(id);
+                    return el ? el.value : '';
+                };
+                const getNum = (id) => {
+                    const v = getVal(id);
+                    const n = parseFloat(normalizeNumber(v));
+                    return isNaN(n) ? 0 : n;
+                };
+
+                // جمع‌آوری دیتا (حتی اگر input ها disabled باشند)
+                const data = {
+                    company_id: currentCompanyId,
+                    record_number: currentRecordNumber,
+                    stage: currentStage,
+
+                    // فیلدهای ثابت
+                    invoice_number: getVal('invoice_number') || null,
+                    invoice_type: getVal('invoice_type') || null,
+                    invoice_amount: getNum('invoice_amount'),
+                    allocation_amount: getNum('allocation_amount'),
+                    request_number: getVal('request_number') || null,
+                    request_date: getVal('request_date') || null,
+                    request_result: getVal('request_result') || null,
+                    settlement_method: getVal('settlement_method') || null,
+
+                    // فیلدهای مرحله‌ای
+                    paid_amount: getNum('paid_amount'),
+                    advance_amortization: getNum('advance_amortization'),
+                    partial_amortization: getNum('partial_amortization'),
+                };
+
+                // تعیین متد و URL درست
+                let method, url;
+
+                // اول وجود رکورد را چک کن
+                const checkUrl = `/api/financial_info/${currentCompanyId}/${currentRecordNumber}/${currentStage}`;
+                const checkResponse = await fetch(checkUrl, { credentials: 'include' });
+
+                if (checkResponse.ok) {
+                // رکورد وجود دارد → PUT روی مسیر پارامتری
+                method = 'PUT';
+                url = checkUrl;
+                } else if (checkResponse.status === 404) {
+                // رکورد وجود ندارد → POST روی endpoint ایجاد
+                method = 'POST';
+                url = `/api/financial_info/`;
+                } else {
+                const msg = await checkResponse.text().catch(() => '');
+                throw new Error('خطا در بررسی موجودیت رکورد: ' + msg);
+                }
+
+                const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+                credentials: 'include'
+                });
+
+
+                if (response.ok) {
+                    alert('اطلاعات با موفقیت ذخیره شد');
+
+                    if (method === 'POST' && !isFinalSave) {
+                        currentStage++;
+                        // برای مرحله بعدی، داده‌های ثابت را از مرحله ۱ بارگذاری و قفل کنیم
+                        await loadFinancialData(currentCompanyId, currentRecordNumber, currentStage);
+                        document.getElementById('financial-title').textContent = `مرحله ${currentStage} - ردیف ${currentRecordNumber}`;
+                    } else if (isFinalSave) {
+                        handleBackFinancial();
+                    }
+                } else {
+                    const msg = await response.text().catch(() => '');
+                    throw new Error('خطا در ذخیره اطلاعات: ' + msg);
+                }
+            } catch (error) {
+                console.error('Error saving financial data:', error);
+                alert('خطا در ذخیره اطلاعات');
+            }
+        };
+
+
+        // Handle view stages
+        const handleViewStages = async () => {
+            const companyId = companyIdInput.value.trim();
+            if (!companyId) {
+                alert('لطفاً ابتدا شناسه ملی شرکت را وارد کنید');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/financial_info/${companyId}`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const payload = await response.json();
+                    const items = Array.isArray(payload) ? payload : (payload.items || []);
+                    displayStages(items);
+                    stagesModal.classList.add('modal-open');
+                } else {
+                    throw new Error('خطا در دریافت اطلاعات مراحل');
+                }
+
+            } catch (error) {
+                console.error('Error viewing stages:', error);
+                alert('خطا در دریافت اطلاعات مراحل');
+            }
+        };
+
+        // Display stages - نمایش مقادیر صفر برای فیلدهای محاسباتی
+        const displayStages = (financialInfos) => {
+            stagesTable.innerHTML = '';
+            
+            financialInfos.forEach(info => {
+                const row = document.createElement('tr');
+                row.className = 'border-b dark:border-gray-700';
+                
+                row.innerHTML = `
+                    <td class="p-2">${info.stage}</td>
+                    <td class="p-2">${info.invoice_number || ''}</td>
+                    <td class="p-2">${info.invoice_type || ''}</td>
+                    <td class="p-2">${(info.invoice_amount !== undefined && info.invoice_amount !== null) ? parseFloat(info.invoice_amount).toLocaleString('fa-IR') : ''}</td>
+                    <td class="p-2">${(info.paid_amount !== undefined && info.paid_amount !== null) ? parseFloat(info.paid_amount).toLocaleString('fa-IR') : ''}</td>
+                    <td class="p-2">${info.request_date || ''}</td>
+                    <td class="p-2">${info.request_result || ''}</td>
+                    <td class="p-2">
+                        <button class="delete-stage p-1 text-red-600 hover:text-red-800 dark:hover:text-red-400" data-company-id="${info.company_id}" data-record-number="${info.record_number}" data-stage="${info.stage}">
+                            حذف
+                        </button>
+                    </td>
+                `;
+                
+                stagesTable.appendChild(row);
+            });
+            
+            // اضافه کردن event listener برای دکمه‌های حذف
+            document.querySelectorAll('.delete-stage').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const companyId = e.target.dataset.companyId;
+                    const recordNumber = e.target.dataset.recordNumber;
+                    const stage = e.target.dataset.stage;
+                    deleteStage(companyId, recordNumber, stage);
+                });
+            });
+        };
+
+        // Delete stage
+        const deleteStage = async (companyId, recordNumber, stage) => {
+            if (!confirm('آیا از حذف این مرحله اطمینان دارید؟')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stage}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    alert('مرحله با موفقیت حذف شد');
+                    stagesModal.classList.remove('modal-open');
+                    await updateRecordNumbers(companyId);
+                } else {
+                    throw new Error('خطا در حذف مرحله');
+                }
+            } catch (error) {
+                console.error('Error deleting stage:', error);
+                alert('خطا در حذف مرحله');
+            }
+        };
+
+        // Handle delete record - حذف همه مراحل یک ردیف
+        const handleDeleteRecord = async () => {
+            const companyId = companyIdInput.value.trim();
+            const recordNumber = recordNumberSelect.value;
+            
+            if (!companyId || recordNumber === 'new') {
+                alert('لطفاً ابتدا یک ردیف معتبر انتخاب کنید');
+                return;
+            }
+            
+            if (!confirm('آیا از حذف تمام مراحل این ردیف اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) {
+                return;
+            }
+            
+            try {
+                // دریافت تمام مراحل این ردیف
+                const response = await fetch(`/api/financial_info/${companyId}`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const payload = await response.json();
+                    const items = Array.isArray(payload) ? payload : (payload.items || []);
+                    const recordStages = items.filter(info => info.record_number === parseInt(recordNumber));
+                                        
+                    // حذف تک‌تک مراحل
+                    for (const stageInfo of recordStages) {
+                        await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stageInfo.stage}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+                    }
+                    
+                    alert('تمامی مراحل ردیف با موفقیت حذف شدند');
+                    await updateRecordNumbers(companyId);
+                } else {
+                    throw new Error('خطا در دریافت اطلاعات مراحل');
+                }
+            } catch (error) {
+                console.error('Error deleting record:', error);
+                alert('خطا در حذف ردیف');
+            }
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
