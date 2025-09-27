@@ -13,6 +13,7 @@ from app.database.models.social_security import SocialSecurity
 from app.database.models.reminder import Reminder
 from app.services.financial_service import calculate_financial_metrics
 from app.schemas.financial_info_schema import FinancialInfo
+from app.api.endpoints import reports
 from app.schemas.project import Project as ProjectSchema
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -109,6 +110,7 @@ app.include_router(financial_info.router, prefix="/api", tags=["Financial Info"]
 app.include_router(guarantees.router, prefix="/api", tags=["Guarantees"])
 app.include_router(social_security.router, prefix="/api", tags=["Social Security"])
 app.include_router(reminders.router, prefix="/api", tags=["Reminders"])
+app.include_router(reports.router)
 
 def check_login(request: Request):
     if not request.session.get("logged_in"):
@@ -157,6 +159,11 @@ async def check_login_status(request: Request):
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     return templates.TemplateResponse("settings.html", {"request": request})
+
+
+@app.get("/reports", response_class=HTMLResponse)
+async def reports_page(request: Request, logged_in: bool = Depends(check_login)):
+    return templates.TemplateResponse("reports.html", {"request": request})
 
 # Change password
 @app.post("/settings/change-password")

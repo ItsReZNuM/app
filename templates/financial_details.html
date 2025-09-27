@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="fa">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,14 +12,17 @@
             font-family: 'Dana';
             src: url('/static/fonts/Dana.ttf') format('truetype');
         }
+
         body {
             font-family: 'Dana', sans-serif;
             background: linear-gradient(to bottom, #1A3C34, #2E7D32);
             overflow-x: hidden;
         }
+
         .dark body {
             background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
         }
+
         .sidebar {
             background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
             border-left: 2px solid #DDE4E8;
@@ -31,24 +35,29 @@
             z-index: 50;
             width: 14rem;
         }
+
         .dark .sidebar {
             background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
             border-left: 2px solid #4B5563;
         }
+
         .sidebar-hidden {
             transform: translateX(100%);
         }
+
         .content-container {
             transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
             position: relative;
             z-index: 10;
         }
+
         .content-shrunk {
             transform: scale(0.95);
             margin-right: 14rem;
             opacity: 0.7;
             pointer-events: none;
         }
+
         @media (max-width: 767px) {
             .content-shrunk {
                 margin-right: 0;
@@ -57,6 +66,7 @@
                 pointer-events: auto;
             }
         }
+
         #toggle-sidebar-open {
             position: absolute;
             top: 1rem;
@@ -64,79 +74,98 @@
             z-index: 60;
             display: none;
         }
+
         #toggle-sidebar-closed {
             position: fixed;
             top: 1rem;
             right: 1rem;
             z-index: 40;
         }
+
         .sidebar-hidden #toggle-sidebar-open {
             display: none;
         }
+
         .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
             display: block;
         }
+
         .sidebar-hidden #toggle-sidebar-closed {
             display: block;
         }
+
         .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
             display: none;
         }
+
         .sidebar img {
             width: 32px;
             height: 32px;
         }
+
         .error-message {
             color: #E53935;
             display: none;
         }
+
         .dark .error-message {
             color: #F87171;
         }
+
         .modal {
             display: none;
             background: rgba(0, 0, 0, 0.5);
         }
+
         .modal-open {
             display: flex;
         }
+
         table {
             background-color: white;
             border: 2px solid #F4511E;
             border-radius: 8px;
         }
+
         th {
             background-color: #F4511E;
             color: white;
             padding: 6px;
         }
+
         .dark table {
             background-color: #1F2937;
             border-color: #F87171;
         }
+
         .dark th {
             background-color: #F87171;
         }
+
         .readonly {
             background-color: #F0F0F0 !important;
             cursor: not-allowed;
         }
+
         .dark .readonly {
             background-color: #374151 !important;
         }
+
         /* اضافه کردن این استایل به بخش <style> */
         .loading {
             display: inline-block;
             width: 1rem;
             height: 1rem;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: #fff;
             animation: spin 1s ease-in-out infinite;
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .disabled-btn {
@@ -145,6 +174,7 @@
         }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
     <div id="content-wrapper" class="flex-grow flex flex-col content-container">
         <!-- Header -->
@@ -158,92 +188,132 @@
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">وضعیت مالی</h2>
                 <form id="initial-form-data" class="space-y-4">
                     <div>
-                        <label for="company_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شناسه ملی شرکت</label>
-                        <input type="text" id="company_id" name="company_id" value="{{ company_id }}" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                        <label for="company_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شناسه
+                            ملی شرکت</label>
+                        <input type="text" id="company_id" name="company_id" value="{{ company_id }}"
+                            class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                            placeholder="شناسه ملی شرکت">
                         <p id="company_id-error" class="error-message text-sm mt-1">شناسه ملی نمی‌تواند خالی باشد!</p>
                     </div>
                     <div>
-                        <label for="company_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نام شرکت</label>
-                        <input type="text" id="company_name" name="company_name" value="{{ company_name }}" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="نام شرکت">
+                        <label for="company_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نام
+                            شرکت</label>
+                        <input type="text" id="company_name" name="company_name" value="{{ company_name }}"
+                            class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                            placeholder="نام شرکت">
                         <p id="company_name-error" class="error-message text-sm mt-1">نام شرکت نمی‌تواند خالی باشد!</p>
                     </div>
-                    <button type="button" id="select-company" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 dark:hover:bg-blue-400 transition">انتخاب از لیست شرکت‌ها</button>
+                    <button type="button" id="select-company"
+                        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 dark:hover:bg-blue-400 transition">انتخاب
+                        از لیست شرکت‌ها</button>
                     <div>
-                        <label for="record_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره ردیف</label>
-                        <select id="record_number" name="record_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                        <label for="record_number"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره ردیف</label>
+                        <select id="record_number" name="record_number"
+                            class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
                             <option value="new">ثبت جدید</option>
                         </select>
                     </div>
                     <div>
-                        <label for="stage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مرحله</label>
-                        <select id="stage" name="stage" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                        <label for="stage"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">مرحله</label>
+                        <select id="stage" name="stage"
+                            class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
                             <option value="new">مرحله جدید</option>
                         </select>
                     </div>
                     <!-- جایگزین دو <div class="flex justify-between"> ...> با نسخه‌ی تمیزتر: -->
                     <div class="grid grid-cols-2 gap-2 mt-2">
-                    <button type="button" id="confirm"
-                        class="text-sm px-3 py-2 bg-green-800 text-white rounded-md hover:bg-green-700 transition">تأیید</button>
+                        <button type="button" id="confirm"
+                            class="text-sm px-3 py-2 bg-green-800 text-white rounded-md hover:bg-green-700 transition">تأیید</button>
 
-                    <button type="button" id="view-stages"
-                        class="text-sm px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition">مشاهده مراحل</button>
+                        <button type="button" id="view-stages"
+                            class="text-sm px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition">مشاهده
+                            مراحل</button>
 
-                    <button type="button" id="delete-record"
-                        class="text-sm px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition disabled-btn"
-                        disabled>حذف ردیف</button>
+                        <button type="button" id="delete-record"
+                            class="text-sm px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 transition disabled-btn"
+                            disabled>حذف ردیف</button>
 
-                    <button type="button" id="back"
-                        class="text-sm px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition">بازگشت</button>
+                        <button type="button" id="back"
+                            class="text-sm px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition">بازگشت</button>
                     </div>
 
                 </form>
             </div>
 
             <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg hidden" id="financial-form">
-                <h2 id="financial-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6"></h2>
+                <h2 id="financial-title" class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">
+                </h2>
                 <form id="financial-form-data" class="space-y-4">
                     <div id="fixed-fields" class="space-y-4">
                         <div>
-                            <label for="invoice_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره صورت‌وضعیت</label>
-                            <input type="text" id="invoice_number" name="invoice_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره صورت‌وضعیت">
+                            <label for="invoice_number"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره
+                                صورت‌وضعیت</label>
+                            <input type="text" id="invoice_number" name="invoice_number"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="شماره صورت‌وضعیت">
                         </div>
                         <div>
-                            <label for="invoice_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نوع صورت‌وضعیت</label>
-                            <select id="invoice_type" name="invoice_type" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
-                                <option value="پیش‌پرداخت">پیش‌پرداخت</option>
-                                <option value="علی‌الحساب">علی‌الحساب</option>
+                            <label for="invoice_type"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">نوع
+                                صورت‌وضعیت</label>
+                            <select id="invoice_type" name="invoice_type"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                                <option value="پیش‌پرداخت">پیش پرداخت</option>
+                                <option value="علی‌الحساب">علی الحساب</option>
                                 <option value="موقت">موقت</option>
                                 <option value="قطعی">قطعی</option>
                                 <option value="تعدیل">تعدیل</option>
                             </select>
                         </div>
                         <div>
-                            <label for="invoice_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ صورت‌وضعیت</label>
-                            <input type="text" id="invoice_amount" name="invoice_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ صورت‌وضعیت (ریال)">
+                            <label for="invoice_amount"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ
+                                صورت‌وضعیت</label>
+                            <input type="text" id="invoice_amount" name="invoice_amount"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="مبلغ صورت‌وضعیت (ریال)">
                         </div>
                         <div>
-                            <label for="allocation_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ تخصیص</label>
-                            <input type="text" id="allocation_amount" name="allocation_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ تخصیص (ریال)">
+                            <label for="allocation_amount"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ تخصیص</label>
+                            <input type="text" id="allocation_amount" name="allocation_amount"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="مبلغ تخصیص (ریال)">
                         </div>
                         <div>
-                            <label for="request_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره نامه درخواست</label>
-                            <input type="text" id="request_number" name="request_number" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره نامه درخواست">
+                            <label for="request_number"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">شماره نامه
+                                درخواست</label>
+                            <input type="text" id="request_number" name="request_number"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="شماره نامه درخواست">
                         </div>
                         <div>
-                            <label for="request_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ نامه درخواست</label>
-                            <input type="text" id="request_date" name="request_date" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="YYYY-MM-DD">
+                            <label for="request_date"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ نامه
+                                درخواست</label>
+                            <input type="text" id="request_date" name="request_date"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="YYYY-MM-DD">
                         </div>
                         <div>
-                            <label for="request_result" class="block text-sm font-medium text-gray-700 dark:text-gray-300">نتیجه درخواست</label>
-                            <select id="request_result" name="request_result" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <label for="request_result"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">نتیجه درخواست</label>
+                            <select id="request_result" name="request_result"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
                                 <option value="تایید شده">تایید شده</option>
                                 <option value="تایید نشده">تایید نشده</option>
                                 <option value="درحال بررسی">درحال بررسی</option>
                             </select>
                         </div>
                         <div>
-                            <label for="settlement_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300">روش تسویه</label>
-                            <select id="settlement_method" name="settlement_method" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            <label for="settlement_method"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">روش تسویه</label>
+                            <select id="settlement_method" name="settlement_method"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
                                 <option value="نقد">نقد</option>
                                 <option value="اسناد خزانه">اسناد خزانه</option>
                             </select>
@@ -251,54 +321,91 @@
                     </div>
                     <div id="variable-fields" class="space-y-4">
                         <div>
-                            <label for="paid_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ پرداخت‌شده</label>
-                            <input type="text" id="paid_amount" name="paid_amount" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مبلغ پرداخت‌شده (ریال)">
+                            <label for="paid_amount"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ
+                                پرداخت‌شده</label>
+                            <input type="text" id="paid_amount" name="paid_amount"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="مبلغ پرداخت‌شده (ریال)">
                         </div>
                         <div>
-                            <label for="advance_amortization" class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک پیش‌پرداخت</label>
-                            <input type="text" id="advance_amortization" name="advance_amortization" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="استهلاک پیش‌پرداخت (ریال)">
+                            <label for="advance_amortization"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک
+                                پیش‌پرداخت</label>
+                            <input type="text" id="advance_amortization" name="advance_amortization"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="استهلاک پیش‌پرداخت (ریال)">
                         </div>
                         <div>
-                            <label for="partial_amortization" class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک علی‌الحساب</label>
-                            <input type="text" id="partial_amortization" name="partial_amortization" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="استهلاک علی‌الحساب (ریال)">
+                            <label for="partial_amortization"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک
+                                علی‌الحساب</label>
+                            <input type="text" id="partial_amortization" name="partial_amortization"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="استهلاک علی‌الحساب (ریال)">
                         </div>
                     </div>
                     <div id="calc-fields" class="space-y-4">
                         <div>
-                            <label for="remaining_invoice" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده صورت‌وضعیت</label>
-                            <input type="text" id="remaining_invoice" name="remaining_invoice" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                            <label for="remaining_invoice"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده
+                                صورت‌وضعیت</label>
+                            <input type="text" id="remaining_invoice" name="remaining_invoice"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
                         </div>
                         <div>
-                            <label for="remaining_advance" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده پیش‌پرداخت</label>
-                            <input type="text" id="remaining_advance" name="remaining_advance" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                            <label for="remaining_advance"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده
+                                پیش‌پرداخت</label>
+                            <input type="text" id="remaining_advance" name="remaining_advance"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
                         </div>
                         <div>
-                            <label for="remaining_partial" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده علی‌الحساب</label>
-                            <input type="text" id="remaining_partial" name="remaining_partial" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                            <label for="remaining_partial"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده
+                                علی‌الحساب</label>
+                            <input type="text" id="remaining_partial" name="remaining_partial"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
                         </div>
                         <div>
-                            <label for="contractor_credit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">بستانکاری پیمانکار</label>
-                            <input type="text" id="contractor_credit" name="contractor_credit" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                            <label for="contractor_credit"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">بستانکاری
+                                پیمانکار</label>
+                            <input type="text" id="contractor_credit" name="contractor_credit"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
                         </div>
                         <div>
-                            <label for="contractor_debit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">بدهکاری پیمانکار</label>
-                            <input type="text" id="contractor_debit" name="contractor_debit" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                            <label for="contractor_debit"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">بدهکاری
+                                پیمانکار</label>
+                            <input type="text" id="contractor_debit" name="contractor_debit"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
                         </div>
                         <div>
-                            <label for="total_paid_invoices" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مجموع مبالغ پرداخت‌شده</label>
-                            <input type="text" id="total_paid_invoices" name="total_paid_invoices" class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100" readonly>
+                            <label for="total_paid_invoices"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مجموع مبالغ
+                                پرداخت‌شده</label>
+                            <input type="text" id="total_paid_invoices" name="total_paid_invoices"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
                         </div>
                     </div>
                     <!-- جایگزین <div class="flex justify-between"> سه‌گانه دکمه‌ها: -->
                     <div class="grid grid-cols-3 gap-2 mt-4">
-                    <button type="button" id="save"
-                        class="text-sm px-3 py-2 bg-green-800 text-white rounded-md hover:bg-green-700 transition">ذخیره</button>
+                        <button type="button" id="save"
+                            class="text-sm px-3 py-2 bg-green-800 text-white rounded-md hover:bg-green-700 transition">ذخیره</button>
 
-                    <button type="button" id="save-continue"
-                        class="text-sm px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 transition">ذخیره و ادامه</button>
+                        <button type="button" id="save-continue"
+                            class="text-sm px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 transition">ذخیره
+                            و ادامه</button>
 
-                    <button type="button" id="back-financial"
-                        class="text-sm px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition">بازگشت</button>
+                        <button type="button" id="back-financial"
+                            class="text-sm px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition">بازگشت</button>
                     </div>
                 </form>
             </div>
@@ -307,7 +414,8 @@
         <!-- Footer -->
         <footer id="footer" class="bg-green-800 text-white p-4 text-center">
             <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
-            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com"
+                    class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
         </footer>
     </div>
 
@@ -371,7 +479,8 @@
                 </thead>
                 <tbody id="stages-table"></tbody>
             </table>
-            <button id="close-stages-modal" class="mt-4 w-full bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition">بستن</button>
+            <button id="close-stages-modal"
+                class="mt-4 w-full bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition">بستن</button>
         </div>
     </div>
 
@@ -447,26 +556,26 @@
         // تابع برای نرمال‌سازی اعداد فارسی/عربی به انگلیسی
         const normalizeNumber = (value) => {
             if (!value) return '';
-            
+
             // تبدیل ارقام فارسی و عربی به انگلیسی
             const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
             const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-            
+
             let normalized = value.toString();
-            
+
             // جایگزینی ارقام فارسی
             persianNumbers.forEach((num, index) => {
                 normalized = normalized.replace(new RegExp(num, 'g'), index);
             });
-            
+
             // جایگزینی ارقام عربی
             arabicNumbers.forEach((num, index) => {
                 normalized = normalized.replace(new RegExp(num, 'g'), index);
             });
-            
+
             // حذف جداکننده‌ها (کاما و جداکننده فارسی)
             normalized = normalized.replace(/[,،]/g, '');
-            
+
             return normalized;
         };
 
@@ -478,12 +587,22 @@
             window.addEventListener('resize', handleResize);
 
             // Numeric fields formatting
-            ['invoice_amount', 'allocation_amount', 'paid_amount', 'advance_amortization', 'partial_amortization'].forEach(field => {
-                const input = document.getElementById(field);
-                if (input) {
-                    input.addEventListener('input', formatNumericInput);
-                }
-            });
+            // Numeric fields formatting + real-time calculation
+            ['invoice_amount', 'allocation_amount', 'paid_amount', 'advance_amortization', 'partial_amortization']
+                .forEach(field => {
+                    const input = document.getElementById(field);
+                    if (input) {
+                        input.addEventListener('input', () => {
+                            formatNumericInput({ target: input }); // فرمت اعداد
+                            calculateFields();                     // محاسبه لحظه‌ای
+                        });
+                    }
+                });
+
+            const invoiceTypeInput = document.getElementById('invoice_type');
+            if (invoiceTypeInput) {
+                invoiceTypeInput.addEventListener('change', handleInvoiceTypeChange);
+            }
 
             // اضافه کردن event listeners با استفاده از نسخه غیرفعال‌کننده
             companyIdInput.addEventListener('input', handleCompanyIdInput);
@@ -500,6 +619,16 @@
             closeStagesModal.addEventListener('click', () => stagesModal.classList.remove('modal-open'));
         };
 
+        // تابع کمکی برای گرفتن مقدار عددی از یک input
+        const getNum = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const v = el.value;
+            const n = parseFloat(normalizeNumber(v));
+            return isNaN(n) ? 0 : n;
+        };
+
+
         const softResetCompanyFields = () => {
             recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
             stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
@@ -507,6 +636,28 @@
         };
 
 
+        const handleInvoiceTypeChange = () => {
+            const invoiceType = document.getElementById('invoice_type').value;
+
+            const advanceField = document.getElementById('advance_amortization').closest('div');
+            const partialField = document.getElementById('partial_amortization').closest('div');
+
+            // پیش‌پرداخت → استهلاک پیش‌پرداخت حذف بشه
+            if (invoiceType === 'پیش‌پرداخت') {
+                advanceField.style.display = 'none';
+                partialField.style.display = 'block'; // مطمئن میشیم علی‌الحساب نمایش داده میشه
+            }
+            // علی‌الحساب → استهلاک علی‌الحساب حذف بشه
+            else if (invoiceType === 'علی‌الحساب') {
+                partialField.style.display = 'none';
+                advanceField.style.display = 'block'; // مطمئن میشیم پیش‌پرداخت نمایش داده میشه
+            }
+            // در حالت‌های دیگه → هر دو نمایش داده بشن
+            else {
+                advanceField.style.display = 'block';
+                partialField.style.display = 'block';
+            }
+        };
 
         // تابع جدید برای بارگذاری اطلاعات شرکت
         const loadCompanyInfo = async (companyId) => {
@@ -520,7 +671,7 @@
                     companyNameInput.removeEventListener('input', handleCompanyNameInput);
                     companyNameInput.value = data.company_name || '';
                     companyNameInput.addEventListener('input', handleCompanyNameInput);
-                    
+
                     await updateRecordNumbers(companyId);
                     deleteRecordBtn.disabled = false;
                 } else {
@@ -552,7 +703,7 @@
                 companyIdInput.removeEventListener('input', handleCompanyIdInput);
                 companyIdInput.value = cid;
                 companyIdInput.addEventListener('input', handleCompanyIdInput);
-                
+
                 // بارگذاری اطلاعات شرکت
                 loadCompanyInfo(cid);
             }
@@ -577,14 +728,28 @@
         };
 
         // Format numeric input
+        // نسخه اصلاح‌شده برای فرمت اعداد
         const formatNumericInput = (e) => {
             const input = e.target;
             let value = normalizeNumber(input.value);
-            
+
             if (value && !isNaN(value)) {
-                input.value = parseFloat(value).toLocaleString('fa-IR');
+                // ابتدا به عدد معمولی تبدیل کن
+                const num = parseFloat(value);
+
+                // فرمت به انگلیسی با کاما
+                let formatted = num.toLocaleString('en-US');
+
+                // سپس همه ارقام را به فارسی یکدست تبدیل کن
+                const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+                formatted = formatted.replace(/\d/g, d => persianDigits[d]);
+
+                input.value = formatted;
+            } else {
+                input.value = '';
             }
         };
+
 
         // Handle company ID input
         const handleCompanyIdInput = async () => {
@@ -712,8 +877,8 @@
 
                 const [companyResponse, financialResponse] = await Promise.all([
                     fetch(`/projects/${companyId}`, { credentials: 'include' }),
-                    recordNumber !== 'new' ? 
-                        fetch(`/api/financial_info/${companyId}`, { credentials: 'include' }) : 
+                    recordNumber !== 'new' ?
+                        fetch(`/api/financial_info/${companyId}`, { credentials: 'include' }) :
                         Promise.resolve({ ok: false })
                 ]);
 
@@ -827,17 +992,17 @@
                 const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/1`, {
                     credentials: 'include'
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     // پر کردن فیلدهای ثابت
                     const fixedFields = [
-                        'invoice_number', 'invoice_type', 'invoice_amount', 
-                        'allocation_amount', 'request_number', 'request_date', 
+                        'invoice_number', 'invoice_type', 'invoice_amount',
+                        'allocation_amount', 'request_number', 'request_date',
                         'request_result', 'settlement_method'
                     ];
-                    
+
                     fixedFields.forEach(field => {
                         const input = document.getElementById(field);
                         if (input && (data[field] !== undefined && data[field] !== null)) {
@@ -849,7 +1014,7 @@
                             }
                         }
                     });
-                    
+
                     // غیرفعال کردن فیلدهای ثابت
                     disableFixedFields();
                 }
@@ -884,13 +1049,13 @@
                     field.value = '';
                 }
             });
-            
+
             // فعال کردن همه فیلدها
             allFields.forEach(field => {
                 field.disabled = false;
                 field.classList.remove('readonly');
             });
-            
+
             // اگر پارامتر true باشد، فیلدهای ثابت را غیرفعال نگه دار
             if (keepFixedDisabled) {
                 disableFixedFields();
@@ -898,22 +1063,36 @@
         };
 
         // Calculate fields
-        const calculateFields = (data) => {
-            const invoiceAmount = parseFloat(data.invoice_amount) || 0;
-            const allocationAmount = parseFloat(data.allocation_amount) || 0;
-            const paidAmount = parseFloat(data.paid_amount) || 0;
-            const advanceAmortization = parseFloat(data.advance_amortization) || 0;
-            const partialAmortization = parseFloat(data.partial_amortization) || 0;
+        const calculateFields = () => {
+            const invoiceAmount = getNum('invoice_amount');
+            const paidAmount = getNum('paid_amount');
+            const advanceAmortization = getNum('advance_amortization');
+            const partialAmortization = getNum('partial_amortization');
+            const allocationAmount = getNum('allocation_amount');
 
-            // محاسبات
-            const remainingInvoice = invoiceAmount - paidAmount;
-            const remainingAdvance = allocationAmount - advanceAmortization;
-            const remainingPartial = paidAmount - partialAmortization;
-            const contractorCredit = Math.max(0, paidAmount - invoiceAmount);
-            const contractorDebit = Math.max(0, invoiceAmount - paidAmount);
-            const totalPaidInvoices = paidAmount + advanceAmortization + partialAmortization;
+            // مجموع پرداختی‌های ردیف (paid_amount)
+            const totalPaid = paidAmount; // در نسخه پیشرفته باید از تمام مراحل جمع بشه
 
-            // نمایش نتایج
+            // مجموع پیش‌پرداخت‌ها (فرض: در stage 1)
+            const totalAdvance = (document.getElementById('invoice_type').value === 'پیش‌پرداخت' ? invoiceAmount : 0);
+            const totalAdvanceAmort = advanceAmortization;
+
+            // مجموع علی‌الحساب‌ها
+            const totalPartial = (document.getElementById('invoice_type').value === 'علی‌الحساب' ? invoiceAmount : 0);
+            const totalPartialAmort = partialAmortization;
+
+            // فرمول‌ها
+            const remainingInvoice = Math.max(invoiceAmount - totalPaid, 0);
+            const remainingAdvance = Math.max(totalAdvance - totalAdvanceAmort, 0);
+            const remainingPartial = Math.max(totalPartial - totalPartialAmort, 0);
+
+            const balance = invoiceAmount - totalPaid;
+            const contractorCredit = balance < 0 ? Math.abs(balance) : 0;
+            const contractorDebit = balance >= 0 ? balance : 0;
+
+            const totalPaidInvoices = totalPaid; // برای تجمیعی واقعی باید از کل مراحل خوانده بشه
+
+            // نمایش در فیلدها
             document.getElementById('remaining_invoice').value = remainingInvoice.toLocaleString('fa-IR');
             document.getElementById('remaining_advance').value = remainingAdvance.toLocaleString('fa-IR');
             document.getElementById('remaining_partial').value = remainingPartial.toLocaleString('fa-IR');
@@ -922,6 +1101,7 @@
             document.getElementById('total_paid_invoices').value = totalPaidInvoices.toLocaleString('fa-IR');
         };
 
+
         // Handle back financial
         const handleBackFinancial = () => {
             financialForm.classList.add('hidden');
@@ -929,10 +1109,31 @@
         };
 
         // Save financial data - اصلاح برای عدم جهش در حالت PUT
-        // Save financial data - اصلاح برای عدم جهش در حالت PUT و ارسال فیلدهای disabled
+        const normalizeInvoiceType = (val) => {
+            if (!val) return null;
+
+            // تبدیل تمام نیم‌فاصله‌ها به فاصله معمولی
+            const cleaned = val.replace(/\u200c/g, ' ');
+
+            switch (cleaned) {
+                case 'پیش پرداخت':
+                    return 'پیش‌پرداخت';
+                case 'علی الحساب':
+                    return 'علی‌الحساب';
+                case 'موقت':
+                    return 'موقت';
+                case 'قطعی':
+                    return 'قطعی';
+                case 'تعدیل':
+                    return 'تعدیل';
+                default:
+                    return val;
+            }
+        };
+        // تابع ذخیره اطلاعات مالی
         const saveFinancialData = async (isFinalSave) => {
             try {
-                // ⚠️ FormData فیلدهای disabled را ارسال نمی‌کند؛ پس خودمان دستی می‌خوانیم
+                // ⚠️ FormData فیلدهای disabled رو نمی‌خونه → دستی بخونیم
                 const getVal = (id) => {
                     const el = document.getElementById(id);
                     return el ? el.value : '';
@@ -943,7 +1144,7 @@
                     return isNaN(n) ? 0 : n;
                 };
 
-                // جمع‌آوری دیتا (حتی اگر input ها disabled باشند)
+                // آماده‌سازی دیتا
                 const data = {
                     company_id: currentCompanyId,
                     record_number: currentRecordNumber,
@@ -951,7 +1152,7 @@
 
                     // فیلدهای ثابت
                     invoice_number: getVal('invoice_number') || null,
-                    invoice_type: getVal('invoice_type') || null,
+                    invoice_type: normalizeInvoiceType(getVal('invoice_type')), // ✅ نرمال‌سازی
                     invoice_amount: getNum('invoice_amount'),
                     allocation_amount: getNum('allocation_amount'),
                     request_number: getVal('request_number') || null,
@@ -965,42 +1166,40 @@
                     partial_amortization: getNum('partial_amortization'),
                 };
 
-                // تعیین متد و URL درست
-                let method, url;
-
-                // اول وجود رکورد را چک کن
+                // چک کردن رکورد موجود
                 const checkUrl = `/api/financial_info/${currentCompanyId}/${currentRecordNumber}/${currentStage}`;
                 const checkResponse = await fetch(checkUrl, { credentials: 'include' });
 
+                let method, url;
                 if (checkResponse.ok) {
-                // رکورد وجود دارد → PUT روی مسیر پارامتری
-                method = 'PUT';
-                url = checkUrl;
+                    // رکورد وجود دارد → PUT
+                    method = 'PUT';
+                    url = checkUrl;
                 } else if (checkResponse.status === 404) {
-                // رکورد وجود ندارد → POST روی endpoint ایجاد
-                method = 'POST';
-                url = `/api/financial_info/`;
+                    // رکورد وجود ندارد → POST
+                    method = 'POST';
+                    url = `/api/financial_info/`;
                 } else {
-                const msg = await checkResponse.text().catch(() => '');
-                throw new Error('خطا در بررسی موجودیت رکورد: ' + msg);
+                    const msg = await checkResponse.text().catch(() => '');
+                    throw new Error('خطا در بررسی موجودیت رکورد: ' + msg);
                 }
 
+                // ارسال درخواست
                 const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-                credentials: 'include'
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                    credentials: 'include'
                 });
 
-
                 if (response.ok) {
-                    alert('اطلاعات با موفقیت ذخیره شد');
+                    alert('اطلاعات با موفقیت ذخیره شد ✅');
 
                     if (method === 'POST' && !isFinalSave) {
                         currentStage++;
-                        // برای مرحله بعدی، داده‌های ثابت را از مرحله ۱ بارگذاری و قفل کنیم
                         await loadFinancialData(currentCompanyId, currentRecordNumber, currentStage);
-                        document.getElementById('financial-title').textContent = `مرحله ${currentStage} - ردیف ${currentRecordNumber}`;
+                        document.getElementById('financial-title').textContent =
+                            `مرحله ${currentStage} - ردیف ${currentRecordNumber}`;
                     } else if (isFinalSave) {
                         handleBackFinancial();
                     }
@@ -1010,9 +1209,10 @@
                 }
             } catch (error) {
                 console.error('Error saving financial data:', error);
-                alert('خطا در ذخیره اطلاعات');
+                alert('خطا در ذخیره اطلاعات ❌');
             }
         };
+
 
 
         // Handle view stages
@@ -1045,11 +1245,11 @@
         // Display stages - نمایش مقادیر صفر برای فیلدهای محاسباتی
         const displayStages = (financialInfos) => {
             stagesTable.innerHTML = '';
-            
+
             financialInfos.forEach(info => {
                 const row = document.createElement('tr');
                 row.className = 'border-b dark:border-gray-700';
-                
+
                 row.innerHTML = `
                     <td class="p-2">${info.stage}</td>
                     <td class="p-2">${info.invoice_number || ''}</td>
@@ -1064,10 +1264,10 @@
                         </button>
                     </td>
                 `;
-                
+
                 stagesTable.appendChild(row);
             });
-            
+
             // اضافه کردن event listener برای دکمه‌های حذف
             document.querySelectorAll('.delete-stage').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -1084,13 +1284,13 @@
             if (!confirm('آیا از حذف این مرحله اطمینان دارید؟')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stage}`, {
                     method: 'DELETE',
                     credentials: 'include'
                 });
-                
+
                 if (response.ok) {
                     alert('مرحله با موفقیت حذف شد');
                     stagesModal.classList.remove('modal-open');
@@ -1108,27 +1308,27 @@
         const handleDeleteRecord = async () => {
             const companyId = companyIdInput.value.trim();
             const recordNumber = recordNumberSelect.value;
-            
+
             if (!companyId || recordNumber === 'new') {
                 alert('لطفاً ابتدا یک ردیف معتبر انتخاب کنید');
                 return;
             }
-            
+
             if (!confirm('آیا از حذف تمام مراحل این ردیف اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) {
                 return;
             }
-            
+
             try {
                 // دریافت تمام مراحل این ردیف
                 const response = await fetch(`/api/financial_info/${companyId}`, {
                     credentials: 'include'
                 });
-                
+
                 if (response.ok) {
                     const payload = await response.json();
                     const items = Array.isArray(payload) ? payload : (payload.items || []);
                     const recordStages = items.filter(info => info.record_number === parseInt(recordNumber));
-                                        
+
                     // حذف تک‌تک مراحل
                     for (const stageInfo of recordStages) {
                         await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stageInfo.stage}`, {
@@ -1136,7 +1336,7 @@
                             credentials: 'include'
                         });
                     }
-                    
+
                     alert('تمامی مراحل ردیف با موفقیت حذف شدند');
                     await updateRecordNumbers(companyId);
                 } else {
@@ -1152,4 +1352,5 @@
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
+
 </html>

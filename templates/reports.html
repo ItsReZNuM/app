@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="fa" class="dark">
+<html dir="rtl" lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -127,23 +127,33 @@
             <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">📊 بخش گزارش‌گیری</h2>
                 <form id="reports-form" class="space-y-6">
-                    <div class="flex items-center">
-                        <label for="company_id" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شناسه ملی شرکت</label>
-                        <input type="text" id="company_id" name="company_id" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <label for="company_id" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شناسه ملی شرکت</label>
+                            <input type="text" id="company_id" name="company_id" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                        </div>
+                        <div class="flex justify-end">
+                            <button id="pick-company" type="button" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition text-sm">
+                                انتخاب از لیست شرکت‌ها
+                            </button>
+                        </div>
+                        <p id="company_id-error" class="error-message text-sm mt-1">لطفاً شناسه ملی را وارد کنید!</p>
                     </div>
-                    <p id="company_id-error" class="error-message text-sm mt-1">لطفاً شناسه ملی را وارد کنید!</p>
+                    
                     <div class="flex items-center">
                         <label for="report_type" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">نوع گزارش</label>
                         <select id="report_type" name="report_type" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                            
                             <option value="مشخصات پروژه">مشخصات پروژه</option>
                             <option value="وضعیت مالی">وضعیت مالی</option>
                             <option value="تضامین">تضامین</option>
                             <option value="بیمه تأمین اجتماعی">بیمه تأمین اجتماعی</option>
                             <option value="گزارش کلی">گزارش کلی</option>
                         </select>
+                        <p id="report_type-error" class="error-message text-sm mt-1">لطفاً نوع گزارش را انتخاب کنید!</p>
                     </div>
                     <div class="flex justify-between">
-                        <button type="button" id="generate-report" class="w-1/2 bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mr-2">دریافت گزارش</button>
+                        <button type="button" id="download-report" class="w-1/2 bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mr-2">دریافت گزارش</button>
                         <button type="button" id="back" class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">بازگشت</button>
                     </div>
                 </form>
@@ -207,8 +217,9 @@
                 form: document.getElementById('reports-form'),
                 companyIdInput: document.getElementById('company_id'),
                 reportTypeSelect: document.getElementById('report_type'),
-                generateReportBtn: document.getElementById('generate-report'),
+                downloadReportBtn: document.getElementById('download-report'),
                 backBtn: document.getElementById('back'),
+                pickCompanyBtn: document.getElementById('pick-company'),
                 companyIdError: document.getElementById('company_id-error'),
                 reportTypeError: document.getElementById('report_type-error'),
                 toast: document.getElementById('toast')
@@ -217,13 +228,15 @@
             // Initialize the module
             function init() {
                 setupEventListeners();
-                checkLoginStatus();
+                checkLogin();
+                populateCompanyIdFromURL();
             }
 
             // Set up event listeners
             function setupEventListeners() {
-                elements.form.addEventListener('submit', handleFormSubmit);
+                elements.downloadReportBtn.addEventListener('click', handleDownloadReport);
                 elements.backBtn.addEventListener('click', navigateToHome);
+                elements.pickCompanyBtn.addEventListener('click', navigateToCompanies);
                 elements.companyIdInput.addEventListener('input', () => hideError(elements.companyIdError));
                 elements.reportTypeSelect.addEventListener('change', () => hideError(elements.reportTypeError));
             }
@@ -232,7 +245,7 @@
             const checkLogin = async () => {
                 try {
                     const response = await fetch('/api/check-login', {
-                        credentials: 'include'  // این خط مهم است
+                        credentials: 'include'
                     });
                     
                     if (response.status === 401) {
@@ -245,10 +258,21 @@
                 }
             };
 
-            // Handle form submission
-            async function handleFormSubmit(e) {
-                e.preventDefault();
-                
+            // Populate company_id from URL parameters
+            function populateCompanyIdFromURL() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const companyId = urlParams.get('company_id');
+                if (companyId) {
+                    elements.companyIdInput.value = companyId;
+                    // Copy to clipboard if possible
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(companyId).catch(() => {});
+                    }
+                }
+            }
+
+            // Handle download report
+            async function handleDownloadReport() {
                 const companyId = elements.companyIdInput.value.trim();
                 const reportType = elements.reportTypeSelect.value;
                 
@@ -257,18 +281,18 @@
                 }
 
                 try {
-                    elements.generateReportBtn.disabled = true;
-                    elements.generateReportBtn.textContent = 'در حال تولید گزارش...';
+                    elements.downloadReportBtn.disabled = true;
+                    elements.downloadReportBtn.textContent = 'در حال تولید گزارش...';
                     
-                    await generateReport(companyId, reportType);
+                    await downloadReport(companyId, reportType);
                     
                     showToast('گزارش با موفقیت تولید و دانلود شد', 'success');
                 } catch (error) {
                     console.error('Error generating report:', error);
                     showToast(error.message || 'خطا در تولید گزارش!', 'error');
                 } finally {
-                    elements.generateReportBtn.disabled = false;
-                    elements.generateReportBtn.textContent = 'دریافت گزارش';
+                    elements.downloadReportBtn.disabled = false;
+                    elements.downloadReportBtn.textContent = 'دریافت گزارش';
                 }
             }
 
@@ -292,35 +316,55 @@
                 return isValid;
             }
 
-            // Generate report via API
-            async function generateReport(companyId, reportType) {
-                const response = await fetch('/api/reports', {
+            // Download report via API
+            // Download report via API (Base64 → Blob)
+            // Download report via API (Base64 → Blob)
+            async function downloadReport(companyId, reportType) {
+                const res = await fetch('/api/reports/base64', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('appPassword')}`
-                    },
-                    body: JSON.stringify({ 
-                        company_id: companyId, 
-                        report_type: reportType 
-                    })
+                    body: JSON.stringify({ company_id: companyId, report_type: reportType })
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'خطا در تولید گزارش!');
+                if (!res.ok) {
+                    // تلاش برای گرفتن پیام خطای دقیق از JSON
+                    let detail = 'خطا در تولید گزارش!';
+                    try {
+                        const err = await res.json();
+                        if (err && err.detail) detail = err.detail;
+                    } catch (_) {}
+                    throw new Error(detail);
                 }
 
-                const blob = await response.blob();
+                // پاسخ JSON حاوی Base64
+                const j = await res.json();
+
+                // Base64 → bytes
+                const byteChars = atob(j.data_b64);
+                const bytes = new Uint8Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+
+                // ساخت Blob و دانلود
+                const blob = new Blob([bytes], { type: j.mime || 'application/octet-stream' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `report_${reportType}_${companyId}.xlsx`;
+
+                // نام فایل پیشنهادی سرور (ممکن است فارسی باشد) → کاراکترهای غیرمجاز فایل‌سیستم حذف شوند
+                const safeName = (j.filename || 'report.xlsx').replace(/[\\/:*?"<>|]/g, '_');
+                a.download = safeName;
+
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
                 window.URL.revokeObjectURL(url);
+            }
+
+
+            // Navigate to companies page for selection
+            function navigateToCompanies() {
+                window.location.href = '/companies?select=true&return=reports';
             }
 
             // Show error message
@@ -378,24 +422,18 @@
                 // Responsive sidebar handling
                 window.addEventListener('resize', () => {
                     if (window.innerWidth >= 768) {
-                        if (sidebar.classList.contains('sidebar-hidden')) {
-                            sidebar.classList.remove('sidebar-hidden');
-                            contentWrapper.classList.add('content-shrunk');
-                        }
+                        // On desktop, sidebar stays closed by default
+                        contentWrapper.classList.remove('content-shrunk');
                     } else {
+                        // On mobile, sidebar stays closed
                         sidebar.classList.add('sidebar-hidden');
                         contentWrapper.classList.remove('content-shrunk');
                     }
                 });
 
-                // Initial sidebar state
-                if (window.innerWidth >= 768) {
-                    sidebar.classList.remove('sidebar-hidden');
-                    contentWrapper.classList.add('content-shrunk');
-                } else {
-                    sidebar.classList.add('sidebar-hidden');
-                    contentWrapper.classList.remove('content-shrunk');
-                }
+                // Initial sidebar state - always closed by default
+                sidebar.classList.add('sidebar-hidden');
+                contentWrapper.classList.remove('content-shrunk');
             }
 
             return {

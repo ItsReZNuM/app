@@ -6,21 +6,19 @@ from pydantic import BaseModel, Field, validator
 # =========================================================
 
 def _norm_fa(v: Optional[str]) -> Optional[str]:
-    """
-    پاکسازی نیم‌فاصله‌ها/فاصله‌های نامرئی و یکسان‌سازی ی/ک عربی.
-    """
     if v is None:
         return None
     s = str(v)
     s = (
-        s.replace("\u200c", "")  # ZWNJ
-         .replace("\u200f", "")  # RLM
-         .replace("\u00a0", " ") # NBSP
-         .replace("\u202f", " ") # NNBSP
-         .replace("\u2009", " ") # thin space
+        # s = s.replace("\u200c", "")  # ❌ این خط را حذف کن: ZWNJ را پاک نکن
+        s.replace("\u200f", "")   # RLM
+         .replace("\u00a0", " ")  # NBSP → space
+         .replace("\u202f", " ")  # NNBSP → space
+         .replace("\u2009", " ")  # thin space → space
     )
     s = s.translate(str.maketrans({"ي": "ی", "ك": "ک"}))
     return s.strip()
+
 
 # نگاشت‌های انگلیسی/فارسی → مقدار فارسی استاندارد
 _INVOICE_TYPE_MAP = {
@@ -38,6 +36,14 @@ _INVOICE_TYPE_MAP = {
     # FA variants seen in DB
     "صورت وضعیت": "موقت",
 }
+
+_INVOICE_TYPE_MAP.update({
+    "پیش پرداخت": "پیش‌پرداخت",
+    "پیشپرداخت": "پیش‌پرداخت",
+    "علی الحساب": "علی‌الحساب",
+    "علیالحساب": "علی‌الحساب",
+})
+
 
 _REQUEST_RESULT_MAP = {
     # EN
@@ -107,7 +113,12 @@ class FinancialInfoBase(BaseModel):
         s = _norm_fa(v)
         if s in ("پیش‌پرداخت", "علی‌الحساب", "موقت", "قطعی", "تعدیل"):
             return s
-        return _INVOICE_TYPE_MAP.get((s or "").lower(), s)
+        # تلاش برای نگاشت مستقیم یا بدون فاصله
+        key = (s or "")
+        return (_INVOICE_TYPE_MAP.get(key)
+                or _INVOICE_TYPE_MAP.get(key.replace(" ", ""))
+                or s)
+
 
     @validator("request_result", pre=True)
     def _normalize_request_result(cls, v):

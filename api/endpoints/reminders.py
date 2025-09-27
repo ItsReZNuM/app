@@ -26,8 +26,9 @@ router = APIRouter(
     }
 )
 def create_reminder(reminder: ReminderCreate, db: Session = Depends(get_db)):
-    """Create a new reminder with jalali and gregorian dates."""
-    return ReminderService.create_reminder(db, reminder.message, reminder.jalali_date)
+    """Create a new reminder with optional jalali and gregorian dates."""
+    return ReminderService.create_reminder(db, reminder)
+
 
 @router.get(
     "/",
@@ -41,6 +42,20 @@ def read_reminders(db: Session = Depends(get_db)):
     """Get all reminders ordered by created_at descending."""
     return ReminderService.get_reminders(db)
 
+
+@router.get(
+    "/today",
+    response_model=List[Reminder],
+    responses={
+        status.HTTP_200_OK: {"description": "List of today's reminders"},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Internal server error"}
+    }
+)
+def read_today_reminders(db: Session = Depends(get_db)):
+    """Get all reminders for today (regardless of status)."""
+    return ReminderService.get_today_reminders(db)
+
+
 @router.get(
     "/pending",
     response_model=List[Reminder],
@@ -53,6 +68,7 @@ def read_pending_reminders(db: Session = Depends(get_db)):
     """Get pending reminders for today."""
     return ReminderService.get_pending_reminders(db)
 
+
 @router.put(
     "/{reminder_id}/read",
     response_model=Reminder,
@@ -64,7 +80,11 @@ def read_pending_reminders(db: Session = Depends(get_db)):
 )
 def mark_as_read(reminder_id: int, db: Session = Depends(get_db)):
     """Mark a reminder as read."""
-    return ReminderService.mark_reminder_as_read(db, reminder_id)
+    reminder = ReminderService.mark_reminder_as_read(db, reminder_id)
+    if not reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    return reminder
+
 
 @router.delete(
     "/{reminder_id}",

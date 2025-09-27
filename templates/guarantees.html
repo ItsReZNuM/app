@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="fa" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,14 +12,17 @@
             font-family: 'Dana';
             src: url('/static/fonts/Dana.ttf') format('truetype');
         }
+
         body {
             font-family: 'Dana', sans-serif;
             background: linear-gradient(to bottom, #1A3C34, #2E7D32);
             overflow-x: hidden;
         }
+
         .dark body {
             background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
         }
+
         .sidebar {
             background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
             border-left: 2px solid #DDE4E8;
@@ -31,24 +35,29 @@
             z-index: 50;
             width: 14rem;
         }
+
         .dark .sidebar {
             background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
             border-left: 2px solid #4B5563;
         }
+
         .sidebar-hidden {
             transform: translateX(100%);
         }
+
         .content-container {
             transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
             position: relative;
             z-index: 10;
         }
+
         .content-shrunk {
             transform: scale(0.95);
             margin-right: 14rem;
             opacity: 0.7;
             pointer-events: none;
         }
+
         @media (max-width: 767px) {
             .content-shrunk {
                 margin-right: 0;
@@ -57,6 +66,7 @@
                 pointer-events: auto;
             }
         }
+
         #toggle-sidebar-open {
             position: absolute;
             top: 1rem;
@@ -64,44 +74,55 @@
             z-index: 60;
             display: none;
         }
+
         #toggle-sidebar-closed {
             position: fixed;
             top: 1rem;
             right: 1rem;
             z-index: 40;
         }
+
         .sidebar-hidden #toggle-sidebar-open {
             display: none;
         }
+
         .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
             display: block;
         }
+
         .sidebar-hidden #toggle-sidebar-closed {
             display: block;
         }
+
         .sidebar:not(.sidebar-hidden) #toggle-sidebar-closed {
             display: none;
         }
+
         .sidebar img {
             width: 32px;
             height: 32px;
         }
+
         .error-message {
             color: #E53935;
             display: none;
         }
+
         .dark .error-message {
             color: #F87171;
         }
+
         .dynamic-field {
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
         }
+
         .dynamic-field.show {
             opacity: 1;
         }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
     <div id="content-wrapper" class="flex-grow flex flex-col content-container">
         <header id="header" class="bg-green-800 text-white p-4 flex justify-center items-center relative">
@@ -113,18 +134,31 @@
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">بخش تضامین</h2>
                 <form id="guarantee-form" class="space-y-6">
                     <div class="flex items-center">
-                        <label for="company_id" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شناسه ملی شرکت</label>
-                        <input type="text" id="company_id" name="company_id" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شناسه ملی شرکت">
+                        <label for="company_id"
+                            class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شناسه ملی
+                            شرکت</label>
+                        <input type="text" id="company_id" name="company_id"
+                            class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                            placeholder="شناسه ملی شرکت">
                     </div>
                     <p id="company_id-error" class="error-message text-sm mt-1">شناسه ملی نمی‌تواند خالی باشد!</p>
-                    <button type="button" id="select-company" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 dark:hover:bg-blue-400 transition">انتخاب از لیست شرکت‌ها</button>
+                    <button type="button" id="select-company"
+                        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-500 dark:hover:bg-blue-400 transition">انتخاب
+                        از لیست شرکت‌ها</button>
                     <div class="flex items-center">
-                        <label for="record_number" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شماره ردیف</label>
-                        <input type="number" id="record_number" name="record_number" min="1" step="1" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100" placeholder="شماره ردیف">
+                        <label for="record_number"
+                            class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">شماره
+                            ردیف</label>
+                        <input type="number" id="record_number" name="record_number" min="1" step="1"
+                            class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                            placeholder="شماره ردیف">
                     </div>
                     <div class="flex items-center">
-                        <label for="guarantee_type" class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">نوع تضمین</label>
-                        <select id="guarantee_type" name="guarantee_type" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
+                        <label for="guarantee_type"
+                            class="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 text-right ml-4">نوع
+                            تضمین</label>
+                        <select id="guarantee_type" name="guarantee_type"
+                            class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
                             <option value="">انتخاب کنید</option>
                             <option value="ضمانت‌نامه">ضمانت‌نامه</option>
                             <option value="سپرده">سپرده</option>
@@ -132,8 +166,10 @@
                     </div>
                     <div id="dynamic-fields" class="space-y-6"></div>
                     <div class="flex justify-between">
-                        <button type="button" id="save" class="w-1/2 bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mr-2">ذخیره</button>
-                        <button type="button" id="back" class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">بازگشت</button>
+                        <button type="button" id="save"
+                            class="w-1/2 bg-green-800 text-white py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mr-2">ذخیره</button>
+                        <button type="button" id="back"
+                            class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">بازگشت</button>
                     </div>
                 </form>
             </div>
@@ -141,7 +177,8 @@
 
         <footer id="footer" class="bg-green-800 text-white p-4 text-center">
             <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
-            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com"
+                    class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
         </footer>
     </div>
 
@@ -226,7 +263,7 @@
                 const response = await fetch('/api/check-login', {
                     credentials: 'include'  // این خط مهم است
                 });
-                
+
                 if (response.status === 401) {
                     window.location.href = '/login';
                 } else if (!response.ok) {
@@ -239,9 +276,15 @@
 
         // ==================== Sidebar Management ====================
         function initializeSidebar() {
+            const savedState = localStorage.getItem('sidebarState');
             if (window.innerWidth >= 768) {
-                sidebar.classList.remove('sidebar-hidden');
-                contentWrapper.classList.add('content-shrunk');
+                if (savedState === 'hidden') {
+                    sidebar.classList.add('sidebar-hidden');
+                    contentWrapper.classList.remove('content-shrunk');
+                } else {
+                    sidebar.classList.remove('sidebar-hidden');
+                    contentWrapper.classList.add('content-shrunk');
+                }
             } else {
                 sidebar.classList.add('sidebar-hidden');
                 contentWrapper.classList.remove('content-shrunk');
@@ -260,7 +303,7 @@
             // Sidebar events
             toggleSidebarOpen.addEventListener('click', toggleSidebar);
             toggleSidebarClosed.addEventListener('click', toggleSidebar);
-            
+
             // Window resize event
             window.addEventListener('resize', () => {
                 if (window.innerWidth >= 768) {
@@ -284,30 +327,32 @@
         // ==================== Form Field Management ====================
         function normalizeDigits(str) {
             if (!str) return '';
-            const map = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9',
-                        '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+            const map = {
+                '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+                '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+            };
             return String(str).replace(/[۰-۹٠-٩]/g, d => map[d]);
-            }
+        }
         function parseNumberField(value) {
             if (!value) return null;
             const raw = normalizeDigits(value).replace(/[,٬\s]/g, ''); // حذف , و ٬
             return raw && !isNaN(raw) ? Number(raw) : null;
-            }
+        }
 
         function updateDynamicFields() {
             const guaranteeType = guaranteeTypeSelect.value;
             dynamicFields.innerHTML = '';
 
             const fields = getFieldsForGuaranteeType(guaranteeType);
-            
+
             fields.forEach(field => {
                 const fieldDiv = document.createElement('div');
                 fieldDiv.className = 'flex items-center dynamic-field';
                 fieldDiv.innerHTML = createFieldHTML(field);
                 dynamicFields.appendChild(fieldDiv);
-                
+
                 setTimeout(() => fieldDiv.classList.add('show'), 10);
-                
+
                 // Add number formatting for amount fields
                 if (['guarantee_amount', 'deposit_amount', 'deposit_released_amount'].includes(field.id)) {
                     addNumberFormatting(document.getElementById(field.id));
@@ -359,7 +404,7 @@
             input.addEventListener('input', () => {
                 formatNumberInput(input);
             });
-            
+
             input.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 if (!formatNumberInput(input)) {
@@ -399,7 +444,16 @@
                 return false;
             }
             return true;
-           
+        }
+
+        function toggleSidebar() {
+            const isHidden = sidebar.classList.toggle('sidebar-hidden');
+            localStorage.setItem('sidebarState', isHidden ? 'hidden' : 'open');
+            if (window.innerWidth >= 768) {
+                contentWrapper.classList.toggle('content-shrunk');
+            }
+        }
+
         function getFormData() {
             const formData = new FormData(guaranteeForm);
             const data = {
@@ -487,4 +541,5 @@
         }
     </script>
 </body>
+
 </html>

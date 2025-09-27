@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="fa" class="dark">
+<html dir="rtl" lang="fa">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,14 +12,17 @@
             font-family: 'Dana';
             src: url('/static/fonts/Dana.ttf') format('truetype');
         }
+
         body {
             font-family: 'Dana', sans-serif;
             background: linear-gradient(to bottom, #1A3C34, #2E7D32);
             overflow-x: hidden;
         }
+
         .dark body {
             background: linear-gradient(to bottom, #0D1F1A, #1A3C34);
         }
+
         .sidebar {
             background: linear-gradient(to bottom, rgba(13, 47, 40, 0.8), rgba(26, 76, 58, 0.8));
             border-left: 2px solid #DDE4E8;
@@ -31,24 +35,29 @@
             z-index: 50;
             width: 14rem;
         }
+
         .dark .sidebar {
             background: linear-gradient(to bottom, rgba(8, 23, 21, 0.8), rgba(13, 47, 40, 0.8));
             border-left: 2px solid #4B5563;
         }
+
         .sidebar-hidden {
             transform: translateX(100%);
         }
+
         .content-container {
             transition: transform 0.3s ease-in-out, margin-right 0.3s ease-in-out;
             position: relative;
             z-index: 10;
         }
+
         .content-shrunk {
             transform: scale(0.95);
             margin-right: 14rem;
             opacity: 0.7;
             pointer-events: none;
         }
+
         @media (max-width: 767px) {
             .content-shrunk {
                 margin-right: 0;
@@ -57,70 +66,93 @@
                 pointer-events: auto;
             }
         }
+
         /* Adjusted positioning for toggle buttons */
         #toggle-sidebar-open {
             position: absolute;
             top: 1rem;
             left: 1rem;
             z-index: 60;
-            display: none; /* Hidden by default when sidebar is open */
+            display: none;
+            /* Hidden by default when sidebar is open */
         }
+
         #toggle-sidebar-closed {
             position: fixed;
             top: 1rem;
             right: 1rem;
             z-index: 40;
         }
+
         /* Show/hide logic for toggle buttons */
-        .sidebar.sidebar-hidden + #toggle-sidebar-closed {
-            display: block; /* Show closed button when sidebar is hidden */
+        .sidebar.sidebar-hidden+#toggle-sidebar-closed {
+            display: block;
+            /* Show closed button when sidebar is hidden */
         }
-        .sidebar:not(.sidebar-hidden) + #toggle-sidebar-closed {
-            display: none; /* Hide closed button when sidebar is open */
+
+        .sidebar:not(.sidebar-hidden)+#toggle-sidebar-closed {
+            display: none;
+            /* Hide closed button when sidebar is open */
         }
+
         .sidebar:not(.sidebar-hidden) #toggle-sidebar-open {
-            display: block; /* Show open button when sidebar is open */
+            display: block;
+            /* Show open button when sidebar is open */
         }
+
         .sidebar.sidebar-hidden #toggle-sidebar-open {
-            display: none; /* Hide open button when sidebar is hidden */
+            display: none;
+            /* Hide open button when sidebar is hidden */
         }
 
         .sidebar img {
             width: 32px;
             height: 32px;
         }
+
         .error-message {
             color: #E53935;
             display: none;
         }
+
         .dark .error-message {
             color: #F87171;
         }
+
         .reminder-item {
             background-color: white;
             border: 2px solid #F4511E;
             border-radius: 8px;
             padding: 8px;
             margin-bottom: 8px;
-            cursor: pointer; /* Indicate clickable */
+            cursor: pointer;
+            /* Indicate clickable */
         }
+
         .dark .reminder-item {
             background-color: #1F2A44;
             border-color: #D84315;
         }
+
         .reminder-details {
-            display: none; /* Hidden by default */
+            display: none;
+            /* Hidden by default */
             margin-top: 8px;
             padding-top: 8px;
-            border-top: 1px dashed #E5E7EB; /* Subtle separator */
-            color: #4B5563; /* Darker text for details */
+            border-top: 1px dashed #E5E7EB;
+            /* Subtle separator */
+            color: #4B5563;
+            /* Darker text for details */
         }
+
         .dark .reminder-details {
             border-top-color: #4B5563;
             color: #D1D5DB;
         }
+
         .reminder-details.expanded {
-            display: block; /* Show when expanded */
+            display: block;
+            /* Show when expanded */
         }
 
         .notification-bell {
@@ -129,13 +161,16 @@
             padding: 0;
             margin: 0;
         }
+
         .notification-bell:hover {
             background: rgba(244, 81, 30, 0.3);
             border-radius: 20px;
         }
+
         .notification-bell:active {
             background: rgba(212, 67, 21, 0.5);
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -148,45 +183,68 @@
             align-items: center;
             z-index: 1000;
         }
+
         /* Modal Content Styling (Adjusted for better fit) */
         .modal-content {
-            background-color: #E0F2F1; /* Light green-teal background */
+            background-color: #E0F2F1;
+            /* Light green-teal background */
             padding: 20px;
             border-radius: 10px;
             width: 90%;
-            max-width: 380px; /* Slightly wider */
+            max-width: 380px;
+            /* Slightly wider */
             text-align: right;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            border: 1px solid #B2DFDB; /* Light border */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow */
+            border: 1px solid #B2DFDB;
+            /* Light border */
         }
+
         .dark .modal-content {
-            background-color: #2F4F4F; /* Darker green-gray for dark mode */
-            border: 1px solid #4F8080; /* Dark mode border */
+            background-color: #2F4F4F;
+            /* Darker green-gray for dark mode */
+            border: 1px solid #4F8080;
+            /* Dark mode border */
         }
+
         .modal-content label {
-            color: #374151; /* Darker gray for labels */
+            color: #374151;
+            /* Darker gray for labels */
         }
+
         .dark .modal-content label {
-            color: #D1D5DB; /* Lighter gray for labels in dark mode */
+            color: #D1D5DB;
+            /* Lighter gray for labels in dark mode */
         }
+
         .modal-content input,
         .modal-content textarea {
-            background-color: #FFFFFF; /* White background for inputs */
-            border-color: #4CAF50; /* Green border for inputs */
-            color: #1F2937; /* Dark text in inputs */
+            background-color: #FFFFFF;
+            /* White background for inputs */
+            border-color: #4CAF50;
+            /* Green border for inputs */
+            color: #1F2937;
+            /* Dark text in inputs */
         }
+
         .dark .modal-content input,
         .dark .modal-content textarea {
-            background-color: #4B5563; /* Darker background for inputs in dark mode */
-            border-color: #607D8B; /* Darker border in dark mode */
-            color: #F3F4F6; /* Light text in inputs in dark mode */
+            background-color: #4B5563;
+            /* Darker background for inputs in dark mode */
+            border-color: #607D8B;
+            /* Darker border in dark mode */
+            color: #F3F4F6;
+            /* Light text in inputs in dark mode */
         }
+
         .modal-content input:focus,
         .modal-content textarea:focus {
             outline: none;
-            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.5); /* Green focus ring */
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.5);
+            /* Green focus ring */
             border-color: #4CAF50;
         }
+
         .dark .modal-content input:focus,
         .dark .modal-content textarea:focus {
             box-shadow: 0 0 0 2px rgba(96, 125, 139, 0.5);
@@ -205,15 +263,19 @@
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
         }
+
         .toast.success {
             background-color: #2E7D32;
         }
+
         .toast.error {
             background-color: #E53935;
         }
+
         .toast.warning {
             background-color: #FB8C00;
         }
+
         .toast.show {
             opacity: 1;
         }
@@ -223,16 +285,20 @@
             display: inline-block;
             width: 1rem;
             height: 1rem;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
         }
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col">
 
     <div id="toast" class="toast"></div>
@@ -245,18 +311,32 @@
         </header>
 
         <main id="main-content" class="flex-grow p-6">
-            <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">📌 آرشیو یادآوری‌ها</h2>
-                    <button id="add-reminder" class="bg-green-700 text-white py-2 px-4 rounded-lg hover:bg-green-600 dark:hover:bg-green-500 transition">افزودن یادآوری جدید</button>
+            <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- ستون چپ: آرشیو یادآوری‌ها -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">📌 آرشیو یادآوری‌ها</h2>
+                        <button id="add-reminder"
+                            class="bg-green-700 text-white py-2 px-4 rounded-lg hover:bg-green-600 dark:hover:bg-green-500 transition">افزودن
+                            یادآوری جدید</button>
+                    </div>
+                    <div id="reminder-list" class="space-y-4"></div>
                 </div>
-                <div id="reminder-list" class="space-y-4"></div>
+
+                <!-- ستون راست: یادآوری‌های امروز -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">📅 یادآوری‌های امروز</h2>
+                    </div>
+                    <div id="today-reminders-list" class="space-y-4"></div>
+                </div>
             </div>
         </main>
 
         <footer id="footer" class="bg-green-800 text-white p-4 text-center">
             <p>© تمامی حقوق محفوظ است | حسین محمدی کیا | تابستان ۱۴۰۴</p>
-            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com" class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
+            <p>ارتباط با ما: <a href="mailto:hosseinmokia@gmail.com"
+                    class="underline hover:text-green-200">hosseinmokia@gmail.com</a></p>
         </footer>
     </div>
 
@@ -305,32 +385,42 @@
             <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">افزودن یادآوری جدید</h3>
             <form id="add-reminder-form" class="space-y-4">
                 <div>
-                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">موضوع یادآوری <span class="text-red-500">*</span></label>
-                    <input type="text" id="subject" name="subject" class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100" placeholder="موضوع یادآوری را وارد کنید..." required>
+                    <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">موضوع
+                        یادآوری <span class="text-red-500">*</span></label>
+                    <input type="text" id="subject" name="subject"
+                        class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100"
+                        placeholder="موضوع یادآوری را وارد کنید..." required>
                     <p id="subject-error" class="error-message text-sm mt-1">لطفاً موضوع یادآوری را وارد کنید!</p>
                 </div>
                 <div>
-                    <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300">متن یادآوری (اختیاری)</label>
-                    <textarea id="message" name="message" class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100" placeholder="متن یادآوری را وارد کنید..." rows="4"></textarea>
+                    <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300">متن یادآوری
+                        (اختیاری)</label>
+                    <textarea id="message" name="message"
+                        class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100"
+                        placeholder="متن یادآوری را وارد کنید..." rows="4"></textarea>
                 </div>
                 <div>
-                    <label for="jalali_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ یادآوری (جلالی - اختیاری)</label>
-                    <input type="text" id="jalali_date" name="jalali_date" class="w-full px-4 py-2 border border-orange-600 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 dark:bg-gray-700 dark:text-gray-100" placeholder="مثلاً 1403-05-12">
-                    <p id="jalali_date-error" class="error-message text-sm mt-1">فرمت تاریخ معتبر (yyyy-mm-dd) وارد کنید!</p>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        تاریخ یادآوری (جلالی - اختیاری)
+                    </label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" id="jalali_day" placeholder="روز"
+                            class="w-full px-2 py-2 border border-orange-600 rounded-lg">
+                        <input type="number" id="jalali_month" placeholder="ماه "
+                            class="w-full px-2 py-2 border border-orange-600 rounded-lg">
+                        <input type="number" id="jalali_year" placeholder="سال"
+                            class="w-full px-2 py-2 border border-orange-600 rounded-lg">
+                    </div>
+                    <p id="jalali_date-error" class="error-message text-sm mt-1">لطفاً تاریخ معتبر وارد کنید!</p>
                 </div>
+
                 <div class="flex justify-between">
-                    <button type="button" id="save-reminder" class="w-1/2 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-500 dark:hover:bg-orange-400 transition mr-2">ذخیره</button>
-                    <button type="button" id="cancel-reminder" class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">لغو</button>
+                    <button type="button" id="save-reminder"
+                        class="w-1/2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-500 dark:hover:bg-green-400 transition mr-2">ذخیره</button>
+                    <button type="button" id="cancel-reminder"
+                        class="w-1/2 bg-red-600 text-white py-2 rounded-lg hover:bg-red-500 dark:hover:bg-red-400 transition ml-2">لغو</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div id="reminder-notification-modal" class="modal">
-        <div class="modal-content">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">یادآوری</h3>
-            <p id="notification-message" class="text-gray-700 dark:text-gray-300 mb-4"></p>
-            <button id="mark-read" class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-500 dark:hover:bg-orange-400 transition">خوانده شد</button>
         </div>
     </div>
 
@@ -350,21 +440,59 @@
                 addReminderForm: document.getElementById('add-reminder-form'),
                 subjectInput: document.getElementById('subject'), // New subject input
                 messageInput: document.getElementById('message'),
-                jalaliDateInput: document.getElementById('jalali_date'),
                 saveReminderBtn: document.getElementById('save-reminder'),
+                todayRemindersList: document.getElementById('today-reminders-list'),
                 cancelReminderBtn: document.getElementById('cancel-reminder'),
-                reminderNotificationModal: document.getElementById('reminder-notification-modal'),
-                notificationMessage: document.getElementById('notification-message'),
-                markReadBtn: document.getElementById('mark-read'),
                 toast: document.getElementById('toast')
+
             };
 
-            // Initialize the module
-            function init() {
-                checkLoginStatus();
+            // Load today's reminders
+            async function loadTodayReminders() {
+                try {
+                    showLoading(elements.todayRemindersList);
+
+                    const response = await fetch('/api/reminders/today', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(await response.text());
+                    }
+
+                    const reminders = await response.json();
+                    renderTodayReminders(reminders);
+
+                } catch (error) {
+                    console.error('Error loading today\'s reminders:', error);
+                    elements.todayRemindersList.innerHTML = `
+            <div class="text-center text-red-500 dark:text-red-400 py-4">
+                ⚠️ خطا در بارگذاری یادآوری‌های امروز
+            </div>
+        `;
+                }
+            }
+
+            // تابع جدید را به ReminderManager اضافه کنید
+            function getTodayJalaliDate() {
+                // فرض بر این است که jalaali.js در صفحه بارگذاری شده است
+                const today = new Date();
+                const jDate = jalaali.toJalaali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+                // فرمت دهی (با 0 در ابتدای ماه و روز)
+                const year = jDate.jy;
+                const month = String(jDate.jm).padStart(2, '0');
+                const day = String(jDate.jd).padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
+            }
+
+            async function init() {
+                await checkLoginStatus();
                 setupEventListeners();
-                loadReminders();
-                startReminderChecker();
+                await loadReminders();
+                await loadTodayReminders(); // اضافه شده
             }
 
             // Set up event listeners
@@ -378,15 +506,12 @@
                 elements.saveReminderBtn.addEventListener('click', handleSaveReminder);
 
                 // Notification modal
-                elements.markReadBtn.addEventListener('click', handleMarkAsRead);
-
                 // Input validation
                 elements.subjectInput.addEventListener('input', () => hideError('subject-error')); // Subject validation
                 elements.messageInput.addEventListener('input', () => hideError('message-error'));
-                elements.jalaliDateInput.addEventListener('input', () => hideError('jalali_date-error'));
 
                 // Close add reminder modal when clicking outside
-                window.addEventListener('click', function(event) {
+                window.addEventListener('click', function (event) {
                     if (event.target === elements.addReminderModal) {
                         hideModal(elements.addReminderModal);
                     }
@@ -455,25 +580,47 @@
                 }
             }
 
-            // Load all reminders
+            // Load all reminders (با لاگ تاریخ و داده‌های دریافتی)
             async function loadReminders() {
                 try {
+                    // 1. نمایش حالت بارگذاری
                     showLoading(elements.reminderList);
 
+                    // 2. درخواست از API صحیح
                     const response = await fetch('/api/reminders', {
+                        method: 'GET',
                         credentials: 'include'
                     });
 
                     if (!response.ok) {
+                        console.error('API responded with an unsuccessful status code:', response.status);
                         throw new Error(await response.text());
                     }
 
                     const reminders = await response.json();
+
+                    // 3. لاگ گرفتن از تاریخ امروز و داده‌های دریافتی
+                    const todayJalali = getTodayJalaliDate();
+                    console.log('Today\'s Jalali Date:', todayJalali);
+                    console.log('Reminders received from API (all data):', reminders);
+
+                    // 4. نمایش داده‌ها
                     renderReminders(reminders);
 
                 } catch (error) {
+                    // 5. مدیریت خطا
                     console.error('Error loading reminders:', error);
-                    showToast('خطا در بارگذاری یادآوری‌ها', 'error');
+                    showToast('❌ خطای بحرانی در بارگذاری یادآوری‌ها.', 'error');
+                    // در صورت شکست، لیست را پاک و پیام خطا نمایش دهید
+                    elements.reminderList.innerHTML = `
+            <div class="text-center text-red-500 dark:text-red-400 py-4">
+                ⚠️ خطا در بارگذاری اطلاعات: ${error.message}
+            </div>
+        `;
+                } finally {
+                    // توجه: اگر از showLoading/hideLoading استفاده می‌کنید، مطمئن شوید که hideLoading اجرا می‌شود. 
+                    // در این نسخه، ما مستقیماً محتوای reminderList را بازنویسی می‌کنیم، اما اگر تابع
+                    // showLoading فقط یک اسپینر موقت اضافه می‌کند، این مرحله ممکن است نیاز به بررسی داشته باشد.
                 }
             }
 
@@ -498,7 +645,7 @@
 
                     let detailsHtml = '';
                     if (reminder.message || reminder.jalali_date) {
-                         detailsHtml = `
+                        detailsHtml = `
                             <div class="reminder-details text-sm">
                                 ${reminder.message ? `<p class="mt-1"><strong>متن:</strong> ${reminder.message}</p>` : ''}
                                 ${reminder.jalali_date ? `<p class="mt-1"><strong>تاریخ:</strong> ${reminder.jalali_date}</p>` : ''}
@@ -564,6 +711,7 @@
                     console.error('Error deleting reminder:', error);
                     showToast('خطا در حذف یادآوری', 'error');
                     await loadReminders(); // Even on error, try to reload to reflect current state
+                    await loadTodayReminders(); // اضافه شده
                 }
             }
 
@@ -571,12 +719,24 @@
             async function handleSaveReminder() {
                 const subject = elements.subjectInput.value.trim(); // Get subject
                 const message = elements.messageInput.value.trim();
-                const jalaliDate = elements.jalaliDateInput.value.trim();
+                const year = document.getElementById('jalali_year').value.trim();
+                const month = document.getElementById('jalali_month').value.trim();
+                const day = document.getElementById('jalali_day').value.trim();
+
+                let jalaliDate = null;
+                if (year && month && day) {
+                    jalaliDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                }
+
 
                 // Validate inputs
-                if (!validateReminderForm(subject, message, jalaliDate)) {
-                    return;
+                if (year || month || day) {
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(jalaliDate)) {
+                        showError('jalali_date-error', 'فرمت تاریخ معتبر (yyyy-mm-dd) وارد کنید!');
+                        isValid = false;
+                    }
                 }
+
 
                 try {
                     showLoading(elements.saveReminderBtn);
@@ -617,6 +777,7 @@
                     showToast('یادآوری با موفقیت ذخیره شد', 'success');
                     hideModal(elements.addReminderModal);
                     await loadReminders();
+                    await loadTodayReminders(); // اضافه شده
 
                 } catch (error) {
                     console.error('Error saving reminder:', error);
@@ -624,6 +785,37 @@
                 } finally {
                     hideLoading(elements.saveReminderBtn, 'ذخیره');
                 }
+            }
+
+            // Render today's reminders list
+            function renderTodayReminders(reminders) {
+                elements.todayRemindersList.innerHTML = '';
+
+                if (reminders.length === 0) {
+                    elements.todayRemindersList.innerHTML = `
+            <div class="text-center text-gray-500 dark:text-gray-400 py-4">
+                برای امروز یادآوری خاصی ثبت نشده است
+            </div>
+        `;
+                    return;
+                }
+
+                reminders.forEach(reminder => {
+                    const reminderItem = document.createElement('div');
+                    reminderItem.className = 'reminder-item flex flex-col p-3 rounded-lg shadow-sm mb-2';
+                    reminderItem.dataset.id = reminder.id;
+
+                    reminderItem.innerHTML = `
+            <div class="flex justify-between items-center w-full">
+                <span class="flex-1 text-gray-800 dark:text-gray-100 font-semibold">${reminder.subject || 'بدون موضوع'}</span>
+            </div>
+            <div class="reminder-details expanded text-sm">
+                ${reminder.message ? `<p class="mt-1"><strong>متن:</strong> ${reminder.message}</p>` : ''}
+                ${reminder.jalali_date ? `<p class="mt-1"><strong>تاریخ:</strong> ${reminder.jalali_date}</p>` : ''}
+            </div>
+        `;
+                    elements.todayRemindersList.appendChild(reminderItem);
+                });
             }
 
             // Validate reminder form inputs
@@ -645,13 +837,7 @@
                 return isValid;
             }
 
-            // Start periodic reminder checker
-            function startReminderChecker() {
-                checkReminders();
-                setInterval(checkReminders, 60000); // Check every 60 seconds
-            }
-
-            // Check for pending reminders (now considers subject too)
+            // بررسی یادآوری‌ها
             async function checkReminders() {
                 try {
                     const response = await fetch('/api/reminders/pending', {
@@ -663,45 +849,34 @@
                     }
 
                     const reminders = await response.json();
+
+                    // تاریخ امروز به فرمت YYYY-MM-DD
                     const today = new Date().toISOString().split('T')[0];
 
                     reminders.forEach(reminder => {
-                        if (reminder.gregorian_date === today && reminder.status === 0) {
-                            elements.notificationMessage.textContent = `${reminder.subject}: ${reminder.message || 'بدون توضیحات'}`;
-                            elements.reminderNotificationModal.dataset.id = reminder.id;
-                            showModal(elements.reminderNotificationModal);
+                        // 🔑 رفع مشکل تاریخ: startsWith برای مقایسه
+                        // 🔑 رفع مشکل status: مقایسه شل (==) تا استرینگ و عدد رو بپذیره
+                        if (reminder.gregorian_date && reminder.gregorian_date.startsWith(today) && reminder.status == 0) {
+
+                            const seenKey = `reminder_seen_${reminder.id}`;
+
+                            // اگر قبلاً دیده نشده بود
+                            if (!localStorage.getItem(seenKey)) {
+                                // پر کردن متن مودال
+                                elements.notificationMessage.textContent = `${reminder.subject}: ${reminder.message || 'بدون توضیحات'}`;
+                                elements.reminderNotificationModal.dataset.id = reminder.id;
+
+                                // نمایش مودال
+                                showModal(elements.reminderNotificationModal);
+
+                                // بلاک کردن محتوای اصلی
+                                document.getElementById("content-wrapper").style.pointerEvents = "none";
+                            }
                         }
                     });
 
                 } catch (error) {
                     console.error('Error checking reminders:', error);
-                }
-            }
-
-            // Handle mark as read button
-            async function handleMarkAsRead() {
-                const reminderId = elements.reminderNotificationModal.dataset.id;
-
-                try {
-                    showLoading(elements.markReadBtn);
-
-                    const response = await fetch(`/api/reminders/${reminderId}/read`, {
-                        method: 'PUT',
-                        credentials: 'include'
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(await response.text());
-                    }
-
-                    hideModal(elements.reminderNotificationModal);
-                    await loadReminders();
-
-                } catch (error) {
-                    console.error('Error marking reminder as read:', error);
-                    showToast('خطا در علامت‌گذاری یادآوری', 'error');
-                } finally {
-                    hideLoading(elements.markReadBtn, 'خوانده شد');
                 }
             }
 
@@ -813,4 +988,5 @@
         });
     </script>
 </body>
+
 </html>
