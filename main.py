@@ -80,6 +80,8 @@ def _as_record(model) -> Dict:
         "paid_amount": _to_float(model.paid_amount),
         "advance_amortization": _to_float(model.advance_amortization),
         "partial_amortization": _to_float(model.partial_amortization),
+        # عبور دادن روش تسویه در صورت نیاز سرویس محاسباتی
+        "settlement_method": getattr(model, "settlement_method", None),
     }
 
 # Exception handler
@@ -232,11 +234,29 @@ async def financial_details_form(request: Request, company_id: str, db: Session 
     
     financial_infos = db.query(FinancialInfoModel).filter_by(company_id=company_id).order_by(FinancialInfoModel.stage).all()
     response_data = []
+
     # Convert DB records to dicts for calculate_financial_metrics
     records = [_as_record(info) for info in financial_infos]
+
+    company_remaining_allocation = 0.0
     if records:
         # Calculate metrics for all records
         metrics_list = calculate_financial_metrics(records)
+
+        # محاسبه مانده تخصیص سطح شرکت (سقف تخصیص کل - مصرف تخصیص کل)
+        try:
+            total_alloc = sum(float(r.get("allocation_amount") or 0) for r in records)
+            total_usage = 0.0
+            for r, m in zip(records, metrics_list):
+                # اگر سرویس مقدار allocation_usage بدهد از آن استفاده می‌کنیم؛ وگرنه paid_amount را ملاک می‌گیریم
+                usage = m.get("allocation_usage") if isinstance(m, dict) else None
+                if usage is None:
+                    usage = r.get("paid_amount") or 0.0
+                total_usage += float(usage or 0.0)
+            company_remaining_allocation = total_alloc - total_usage
+        except Exception:
+            company_remaining_allocation = 0.0
+
         for info, metrics in zip(financial_infos, metrics_list):
             pydantic_info = FinancialInfo.from_orm(info)
             # Add computed fields to pydantic model
@@ -245,6 +265,7 @@ async def financial_details_form(request: Request, company_id: str, db: Session 
                 "remaining_invoice": metrics.get("remaining_invoice", 0.0),
                 "remaining_advance": metrics.get("remaining_advance", 0.0),
                 "remaining_partial": metrics.get("remaining_partial", 0.0),
+                "remaining_allocation": metrics.get("remaining_allocation", 0.0),
                 "contractor_credit": metrics.get("contractor_credit", 0.0),
                 "contractor_debit": metrics.get("contractor_debit", 0.0),
                 "total_paid_invoices": metrics.get("total_paid_invoices", 0.0),
@@ -258,7 +279,8 @@ async def financial_details_form(request: Request, company_id: str, db: Session 
         "request": request,
         "company_id": company_id,
         "company_name": company.company_name,
-        "financial_infos": response_data
+        "financial_infos": response_data,
+        "company_remaining_allocation": company_remaining_allocation,
     })
 
 # Companies list page
@@ -338,6 +360,8 @@ async def create_financial_info(
             "paid_amount": _to_float(data.get("paid_amount")),
             "advance_amortization": _to_float(data.get("advance_amortization")),
             "partial_amortization": _to_float(data.get("partial_amortization")),
+            # عبور دادن روش تسویه در صورت نیاز
+            "settlement_method": data.get("settlement_method"),
         }
 
         # Get all stages for this record + inject current stage
@@ -382,6 +406,14 @@ async def create_financial_info(
                 advance_amortization=_to_float(data.get("advance_amortization")),
                 partial_amortization=_to_float(data.get("partial_amortization")),
             )
+            # ست متریک‌ها هنگام ایجاد
+            financial_info.remaining_invoice = float(current.get("remaining_invoice", 0.0))
+            financial_info.remaining_advance = float(current.get("remaining_advance", 0.0))
+            financial_info.remaining_partial = float(current.get("remaining_partial", 0.0))
+            financial_info.remaining_allocation = float(current.get("remaining_allocation", 0.0))
+            financial_info.contractor_credit = float(current.get("contractor_credit", 0.0))
+            financial_info.contractor_debit = float(current.get("contractor_debit", 0.0))
+            financial_info.total_paid_invoices = float(current.get("total_paid_invoices", 0.0))
             db.add(financial_info)
         else:
             financial_info.invoice_number = data.get("invoice_number")
@@ -395,6 +427,14 @@ async def create_financial_info(
             financial_info.paid_amount = _to_float(data.get("paid_amount"))
             financial_info.advance_amortization = _to_float(data.get("advance_amortization"))
             financial_info.partial_amortization = _to_float(data.get("partial_amortization"))
+            # ست متریک‌ها هنگام ویرایش
+            financial_info.remaining_invoice = float(current.get("remaining_invoice", 0.0))
+            financial_info.remaining_advance = float(current.get("remaining_advance", 0.0))
+            financial_info.remaining_partial = float(current.get("remaining_partial", 0.0))
+            financial_info.remaining_allocation = float(current.get("remaining_allocation", 0.0))
+            financial_info.contractor_credit = float(current.get("contractor_credit", 0.0))
+            financial_info.contractor_debit = float(current.get("contractor_debit", 0.0))
+            financial_info.total_paid_invoices = float(current.get("total_paid_invoices", 0.0))
 
         db.commit()
         return RedirectResponse(url=f"/financial-details/{company_id}", status_code=303)

@@ -195,6 +195,7 @@ class FinancialInfoComputed(BaseModel):
     remaining_invoice: float
     remaining_advance: float
     remaining_partial: float
+    remaining_allocation: float
     contractor_credit: float
     contractor_debit: float
     total_paid_invoices: float

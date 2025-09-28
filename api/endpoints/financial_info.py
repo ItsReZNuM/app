@@ -38,6 +38,7 @@ def _as_record(model: FinancialInfoModel) -> Dict:
         "invoice_amount": _to_float(model.invoice_amount),
         "allocation_amount": _to_float(model.allocation_amount),
         "paid_amount": _to_float(model.paid_amount),
+        "settlement_method": model.settlement_method or None,
         "advance_amortization": _to_float(model.advance_amortization),
         "partial_amortization": _to_float(model.partial_amortization),
     }
@@ -96,6 +97,7 @@ def _apply_metrics_to_model(model: FinancialInfoModel, metrics: Dict) -> None:
     model.remaining_invoice = _to_float(metrics.get("remaining_invoice"))
     model.remaining_advance = _to_float(metrics.get("remaining_advance"))
     model.remaining_partial = _to_float(metrics.get("remaining_partial"))
+    model.remaining_allocation = _to_float(metrics.get("remaining_allocation"))
     model.contractor_credit = _to_float(metrics.get("contractor_credit"))
     model.contractor_debit = _to_float(metrics.get("contractor_debit"))
     model.total_paid_invoices = _to_float(metrics.get("total_paid_invoices"))
@@ -109,7 +111,7 @@ def _apply_metrics_to_model(model: FinancialInfoModel, metrics: Dict) -> None:
     response_model=FinancialInfoResponse,
 )
 def get_financial_info(
-    company_id: int,
+    company_id: str,
     record_number: int,
     stage: int,
     db: Session = Depends(get_db),
@@ -201,6 +203,10 @@ def create_financial_info(
             invoice_type=financial_info.invoice_type,
             invoice_amount=_to_float(financial_info.invoice_amount),
             allocation_amount=_to_float(financial_info.allocation_amount),
+            request_number=financial_info.request_number,
+            request_date=financial_info.request_date,
+            request_result=financial_info.request_result,
+            settlement_method=financial_info.settlement_method,
             paid_amount=_to_float(financial_info.paid_amount),
             advance_amortization=_to_float(financial_info.advance_amortization),
             partial_amortization=_to_float(financial_info.partial_amortization),
@@ -282,6 +288,15 @@ def update_financial_info(
             obj.advance_amortization = _to_float(financial_info.advance_amortization)
         if financial_info.partial_amortization is not None:
             obj.partial_amortization = _to_float(financial_info.partial_amortization)
+        if financial_info.request_number is not None:
+            obj.request_number = financial_info.request_number
+        if financial_info.request_date is not None:
+            obj.request_date = financial_info.request_date
+        if financial_info.request_result is not None:
+            obj.request_result = financial_info.request_result
+        if financial_info.settlement_method is not None:
+            obj.settlement_method = financial_info.settlement_method
+
 
         # ساخت override از مقادیر جدید مرحلهٔ جاری
         override_current = {

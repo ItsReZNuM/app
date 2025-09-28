@@ -172,6 +172,37 @@
             opacity: 0.7;
             cursor: not-allowed;
         }
+
+        /* استایل‌های جدید برای نمایش مقادیر منفی */
+        .negative-value {
+            color: #E53935;
+            font-weight: bold;
+        }
+
+        .dark .negative-value {
+            color: #F87171;
+        }
+
+        .warning-label {
+            font-size: 0.75rem;
+            color: #E53935;
+            margin-top: 2px;
+        }
+
+        .dark .warning-label {
+            color: #F87171;
+        }
+
+        /* استایل برای Wrapperهای مشخص */
+        #advance-amortization-wrapper,
+        #partial-amortization-wrapper {
+            display: block;
+        }
+
+        /* استایل برای حالت‌های مختلف نمایش فیلدها */
+        .field-disabled {
+            display: none;
+        }
     </style>
 </head>
 
@@ -295,9 +326,8 @@
                             <label for="request_date"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ نامه
                                 درخواست</label>
-                            <input type="text" id="request_date" name="request_date"
-                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
-                                placeholder="YYYY-MM-DD">
+                            <input type="date" id="request_date" name="request_date"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100">
                         </div>
                         <div>
                             <label for="request_result"
@@ -328,7 +358,7 @@
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
                                 placeholder="مبلغ پرداخت‌شده (ریال)">
                         </div>
-                        <div>
+                        <div id="advance-amortization-wrapper">
                             <label for="advance_amortization"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک
                                 پیش‌پرداخت</label>
@@ -336,13 +366,21 @@
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
                                 placeholder="استهلاک پیش‌پرداخت (ریال)">
                         </div>
-                        <div>
+                        <div id="partial-amortization-wrapper">
                             <label for="partial_amortization"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">استهلاک
                                 علی‌الحساب</label>
                             <input type="text" id="partial_amortization" name="partial_amortization"
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
                                 placeholder="استهلاک علی‌الحساب (ریال)">
+                        </div>
+                        <!-- فیلد جدید برای مصرف تخصیص -->
+                        <div>
+                            <label for="allocation_usage"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مصرف تخصیص</label>
+                            <input type="text" id="allocation_usage" name="allocation_usage"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 dark:bg-gray-700 dark:text-gray-100"
+                                placeholder="مصرف تخصیص (ریال)">
                         </div>
                     </div>
                     <div id="calc-fields" class="space-y-4">
@@ -353,6 +391,23 @@
                             <input type="text" id="remaining_invoice" name="remaining_invoice"
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
                                 readonly>
+                            <div id="remaining_invoice_warning" class="warning-label"></div>
+                        </div>
+                        <div>
+                            <label for="remaining_allocation"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده تخصیص (ردیف)</label>
+                            <input type="text" id="remaining_allocation" name="remaining_allocation"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
+                            <div id="remaining_allocation_warning" class="warning-label"></div>
+                        </div>
+                        <div>
+                            <label for="remaining_allocation_company"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده تخصیص (شرکت)</label>
+                            <input type="text" id="remaining_allocation_company" name="remaining_allocation_company"
+                                class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
+                                readonly>
+                            <div id="remaining_allocation_company_warning" class="warning-label"></div>
                         </div>
                         <div>
                             <label for="remaining_advance"
@@ -361,6 +416,7 @@
                             <input type="text" id="remaining_advance" name="remaining_advance"
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
                                 readonly>
+                            <div id="remaining_advance_warning" class="warning-label"></div>
                         </div>
                         <div>
                             <label for="remaining_partial"
@@ -369,6 +425,7 @@
                             <input type="text" id="remaining_partial" name="remaining_partial"
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
                                 readonly>
+                            <div id="remaining_partial_warning" class="warning-label"></div>
                         </div>
                         <div>
                             <label for="contractor_credit"
@@ -514,6 +571,69 @@
         let currentRecordNumber = null;
         let currentStage = null;
         let invoiceAmount = 0;
+        let abortController = null;
+        let stagesCache = window.stagesCache || (window.stagesCache = {});
+
+
+        // Utility Functions
+        function debounce(fn, wait = 400) {
+            let timeoutId;
+            return (...args) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => fn.apply(null, args), wait);
+            };
+        }
+
+        // نرمال‌سازی اعداد فارسی/عربی به انگلیسی با پوشش کامل
+        const normalizeNumber = (value) => {
+            if (!value) return '';
+
+            const digitMap = {
+                '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+                '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+            };
+
+            let normalized = value.toString();
+
+            // جایگزینی ارقام فارسی و عربی
+            normalized = normalized.replace(/[۰-۹٠-٩]/g, d => digitMap[d]);
+
+            // حذف تمام جداکننده‌های هزارگان رایج
+            normalized = normalized.replace(/[,\u060C\u066C\u00A0\u202F\s]/g, '');
+
+            // تبدیل اعشار عربی/فارسی به نقطه
+            normalized = normalized.replace(/[\u066B\u06D4]/g, '.');
+
+            return normalized.trim();
+        };
+
+        // فرمت عدد با جداکننده‌های فارسی
+        const formatNumber = (num) => {
+            if (num === null || num === undefined || isNaN(num)) return '';
+            return new Intl.NumberFormat('fa-IR').format(Math.round(num));
+        };
+
+        // اعتبارسنجی مقادیر مالی
+        const validateFinancialInputs = () => {
+            const paidAmount = getNum('paid_amount');
+            const allocationUsage = getNum('allocation_usage');
+            const invoiceAmount = getNum('invoice_amount');
+            const allocationAmount = getNum('allocation_amount');
+
+            // اعتبارسنجی مقادیر منفی
+            if (paidAmount < 0 || allocationUsage < 0 || invoiceAmount < 0 || allocationAmount < 0) {
+                alert('مقادیر نمی‌توانند منفی باشند');
+                return false;
+            }
+
+            // اعتبارسنجی allocation_usage ≤ paid_amount
+            if (allocationUsage > paidAmount) {
+                alert('مصرف تخصیص نمی‌تواند بیشتر از مبلغ پرداخت‌شده باشد');
+                return false;
+            }
+
+            return true;
+        };
 
         // Initialize the application
         const init = () => {
@@ -524,23 +644,37 @@
             handleUrlParameters();
         };
 
-        // Check login status
+        // Check login status با بهبود مدیریت خطا
         const checkLogin = async () => {
             try {
                 const response = await fetch('/api/check-login', {
-                    credentials: 'include'
+                    credentials: 'include',
+                    signal: AbortSignal.timeout(5000)
                 });
+                
                 if (response.status === 401) {
                     window.location.href = '/login';
                 } else if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
             } catch (error) {
-                window.location.href = '/login';
+                if (error.name !== 'AbortError') {
+                    console.error('Login check error:', error);
+                    // به جای ریدایرکت فوری، پیام مناسب نمایش دهید
+                    if (!window.location.href.includes('/login')) {
+                        setTimeout(() => {
+                            if (confirm('اتصال با سرور برقرار نشد. آیا می‌خواهید مجدداً تلاش کنید؟')) {
+                                checkLogin();
+                            } else {
+                                window.location.href = '/login';
+                            }
+                        }, 1000);
+                    }
+                }
             }
         };
 
-        // Initialize sidebar - همیشه بسته شروع شود
+        // Initialize sidebar
         const initSidebar = () => {
             sidebar.classList.add('sidebar-hidden');
             contentWrapper.classList.remove('content-shrunk');
@@ -553,32 +687,14 @@
             }
         };
 
-        // تابع برای نرمال‌سازی اعداد فارسی/عربی به انگلیسی
-        const normalizeNumber = (value) => {
-            if (!value) return '';
-
-            // تبدیل ارقام فارسی و عربی به انگلیسی
-            const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-
-            let normalized = value.toString();
-
-            // جایگزینی ارقام فارسی
-            persianNumbers.forEach((num, index) => {
-                normalized = normalized.replace(new RegExp(num, 'g'), index);
-            });
-
-            // جایگزینی ارقام عربی
-            arabicNumbers.forEach((num, index) => {
-                normalized = normalized.replace(new RegExp(num, 'g'), index);
-            });
-
-            // حذف جداکننده‌ها (کاما و جداکننده فارسی)
-            normalized = normalized.replace(/[,،]/g, '');
-
-            return normalized;
+        // تابع کمکی برای گرفتن مقدار عددی از یک input
+        const getNum = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const v = el.value;
+            const n = parseFloat(normalizeNumber(v));
+            return isNaN(n) ? 0 : n;
         };
-
 
         // Initialize event listeners
         const initEventListeners = () => {
@@ -586,25 +702,27 @@
             toggleSidebarClosed.addEventListener('click', toggleSidebar);
             window.addEventListener('resize', handleResize);
 
-            // Numeric fields formatting
-            // Numeric fields formatting + real-time calculation
-            ['invoice_amount', 'allocation_amount', 'paid_amount', 'advance_amortization', 'partial_amortization']
-                .forEach(field => {
-                    const input = document.getElementById(field);
-                    if (input) {
-                        input.addEventListener('input', () => {
-                            formatNumericInput({ target: input }); // فرمت اعداد
-                            calculateFields();                     // محاسبه لحظه‌ای
-                        });
-                    }
-                });
+            // Numeric fields formatting + real-time calculation با debounce
+            const numericFields = ['invoice_amount', 'allocation_amount', 'paid_amount', 
+                                 'advance_amortization', 'partial_amortization', 'allocation_usage'];
+            
+            const debouncedCalculate = debounce(calculateFields, 400);
+            
+            numericFields.forEach(field => {
+                const input = document.getElementById(field);
+                if (input) {
+                    input.addEventListener('input', (e) => {
+                        formatNumericInput(e);
+                        debouncedCalculate();
+                    });
+                }
+            });
 
             const invoiceTypeInput = document.getElementById('invoice_type');
             if (invoiceTypeInput) {
                 invoiceTypeInput.addEventListener('change', handleInvoiceTypeChange);
             }
 
-            // اضافه کردن event listeners با استفاده از نسخه غیرفعال‌کننده
             companyIdInput.addEventListener('input', handleCompanyIdInput);
             companyNameInput.addEventListener('input', handleCompanyNameInput);
             recordNumberSelect.addEventListener('change', handleRecordNumberChange);
@@ -617,653 +735,734 @@
             saveBtn.addEventListener('click', () => saveFinancialData(true));
             saveContinueBtn.addEventListener('click', () => saveFinancialData(false));
             closeStagesModal.addEventListener('click', () => stagesModal.classList.remove('modal-open'));
+
+            // مدیریت ESC برای مودال
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && stagesModal.classList.contains('modal-open')) {
+                    stagesModal.classList.remove('modal-open');
+                }
+            });
         };
-
-        // تابع کمکی برای گرفتن مقدار عددی از یک input
-        const getNum = (id) => {
-            const el = document.getElementById(id);
-            if (!el) return 0;
-            const v = el.value;
-            const n = parseFloat(normalizeNumber(v));
-            return isNaN(n) ? 0 : n;
-        };
-
-
-        const softResetCompanyFields = () => {
-            recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
-            stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
-            deleteRecordBtn.disabled = true;
-        };
-
 
         const handleInvoiceTypeChange = () => {
             const invoiceType = document.getElementById('invoice_type').value;
+            const advanceWrapper = document.getElementById('advance-amortization-wrapper');
+            const partialWrapper = document.getElementById('partial-amortization-wrapper');
 
-            const advanceField = document.getElementById('advance_amortization').closest('div');
-            const partialField = document.getElementById('partial_amortization').closest('div');
-
-            // پیش‌پرداخت → استهلاک پیش‌پرداخت حذف بشه
             if (invoiceType === 'پیش‌پرداخت') {
-                advanceField.style.display = 'none';
-                partialField.style.display = 'block'; // مطمئن میشیم علی‌الحساب نمایش داده میشه
-            }
-            // علی‌الحساب → استهلاک علی‌الحساب حذف بشه
-            else if (invoiceType === 'علی‌الحساب') {
-                partialField.style.display = 'none';
-                advanceField.style.display = 'block'; // مطمئن میشیم پیش‌پرداخت نمایش داده میشه
-            }
-            // در حالت‌های دیگه → هر دو نمایش داده بشن
-            else {
-                advanceField.style.display = 'block';
-                partialField.style.display = 'block';
-            }
-        };
-
-        // تابع جدید برای بارگذاری اطلاعات شرکت
-        const loadCompanyInfo = async (companyId) => {
-            try {
-                const response = await fetch(`/projects/${companyId}`, {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    // غیرفعال کردن event listener موقتاً برای جلوگیری از حلقه
-                    companyNameInput.removeEventListener('input', handleCompanyNameInput);
-                    companyNameInput.value = data.company_name || '';
-                    companyNameInput.addEventListener('input', handleCompanyNameInput);
-
-                    await updateRecordNumbers(companyId);
-                    deleteRecordBtn.disabled = false;
+                advanceWrapper.classList.remove('field-disabled');  // نمایش استهلاک پیش‌پرداخت
+                partialWrapper.classList.add('field-disabled');     // پنهان کردن استهلاک علی‌الحساب
+                } else if (invoiceType === 'علی‌الحساب') {
+                partialWrapper.classList.remove('field-disabled');  // نمایش استهلاک علی‌الحساب
+                advanceWrapper.classList.add('field-disabled');     // پنهان کردن استهلاک پیش‌پرداخت
                 } else {
-                    resetCompanyFields();
-                }
-            } catch (error) {
-                console.error('Error fetching company:', error);
-                resetCompanyFields();
+                advanceWrapper.classList.remove('field-disabled');
+                partialWrapper.classList.remove('field-disabled');
             }
+
         };
 
         // Handle URL parameters
-        // Handle URL parameters (with path fallback)
         const handleUrlParameters = () => {
             const urlParams = new URLSearchParams(window.location.search);
-            let cid = urlParams.get('company_id');
-
-            if (!cid) {
-                // اگر پارامتر Query نبود، از مسیر /financial-details/{company_id} بردار
-                const segs = window.location.pathname.split('/').filter(Boolean);
-                const idx = segs.indexOf('financial-details');
-                if (idx !== -1 && segs[idx + 1]) {
-                    cid = segs[idx + 1];
-                }
-            }
+            const cid = urlParams.get('company_id');
+            const cname = urlParams.get('company_name');
 
             if (cid) {
-                // جلوگیری از ایجاد حلقه بی‌پایان
-                companyIdInput.removeEventListener('input', handleCompanyIdInput);
                 companyIdInput.value = cid;
-                companyIdInput.addEventListener('input', handleCompanyIdInput);
-
-                // بارگذاری اطلاعات شرکت
+                if (cname) companyNameInput.value = cname;
                 loadCompanyInfo(cid);
             }
         };
 
-
         // Toggle sidebar
         const toggleSidebar = () => {
-            sidebar.classList.toggle('sidebar-hidden');
-            if (window.innerWidth >= 768) {
-                contentWrapper.classList.toggle('content-shrunk');
+            const isHidden = sidebar.classList.contains('sidebar-hidden');
+            if (isHidden) {
+                sidebar.classList.remove('sidebar-hidden');
+                if (window.innerWidth >= 768) {
+                    contentWrapper.classList.add('content-shrunk');
+                }
+            } else {
+                sidebar.classList.add('sidebar-hidden');
+                contentWrapper.classList.remove('content-shrunk');
             }
         };
 
         // Handle window resize
         const handleResize = () => {
-            if (window.innerWidth >= 768 && !sidebar.classList.contains('sidebar-hidden')) {
-                contentWrapper.classList.add('content-shrunk');
-            } else {
+            if (window.innerWidth < 768) {
                 contentWrapper.classList.remove('content-shrunk');
+            } else if (!sidebar.classList.contains('sidebar-hidden')) {
+                contentWrapper.classList.add('content-shrunk');
             }
         };
-
-        // Format numeric input
-        // نسخه اصلاح‌شده برای فرمت اعداد
-        const formatNumericInput = (e) => {
-            const input = e.target;
-            let value = normalizeNumber(input.value);
-
-            if (value && !isNaN(value)) {
-                // ابتدا به عدد معمولی تبدیل کن
-                const num = parseFloat(value);
-
-                // فرمت به انگلیسی با کاما
-                let formatted = num.toLocaleString('en-US');
-
-                // سپس همه ارقام را به فارسی یکدست تبدیل کن
-                const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-                formatted = formatted.replace(/\d/g, d => persianDigits[d]);
-
-                input.value = formatted;
-            } else {
-                input.value = '';
-            }
-        };
-
 
         // Handle company ID input
-        const handleCompanyIdInput = async () => {
-            const companyId = companyIdInput.value.trim();
-            if (!companyId) {
-                resetCompanyFields();
-                return;
-            }
-
-            try {
-                const response = await fetch(`/projects/${companyId}`, {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    // غیرفعال کردن event listener موقتاً
-                    companyNameInput.removeEventListener('input', handleCompanyNameInput);
-                    companyNameInput.value = data.company_name || '';
-                    companyNameInput.addEventListener('input', handleCompanyNameInput);
-                    await updateRecordNumbers(companyId);
-                    deleteRecordBtn.disabled = false;
-                } else {
-                    resetCompanyFields();
-                }
-            } catch (error) {
-                console.error('Error fetching company:', error);
-                resetCompanyFields();
+        const handleCompanyIdInput = async (e) => {
+            const value = e.target.value.trim();
+            if (value && value.length >= 10) {
+                await loadCompanyInfo(value);
+            } else {
+                softResetCompanyFields();
             }
         };
 
         // Handle company name input
-        const handleCompanyNameInput = async () => {
-            const companyName = companyNameInput.value.trim();
-            if (!companyName) {
-                resetCompanyFields();
-                return;
+        const handleCompanyNameInput = (e) => {
+            const value = e.target.value.trim();
+            if (value) {
+                companyNameInput.classList.remove('error');
+                document.getElementById('company_name-error').style.display = 'none';
             }
         };
 
-        // Reset company fields
-        const resetCompanyFields = () => {
-            companyNameInput.value = '';
+        const softResetCompanyFields = () => {
             recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
             stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
             deleteRecordBtn.disabled = true;
+            deleteRecordBtn.classList.add('disabled-btn');
         };
 
-        // Update record numbers - اصلاح با Array.from
-        const updateRecordNumbers = async (companyId) => {
+        // Load company info
+        const loadCompanyInfo = async (companyId) => {
             try {
-                const response = await fetch(`/api/financial_info/${companyId}`, {
-                    credentials: 'include'
+                const response = await fetch(`/api/companies/${companyId}`, {
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
+                
                 if (response.ok) {
-                    const payload = await response.json();
-                    const financialInfos = Array.isArray(payload) ? payload : (payload.items || []);
-                    const recordNumbers = Array.from(new Set(financialInfos.map(info => info.record_number)));
-
-                    recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
-                    recordNumbers.forEach(record => {
-                        const option = document.createElement('option');
-                        option.value = record;
-                        option.textContent = record;
-                        recordNumberSelect.appendChild(option);
-                    });
-
-                    await updateStages(companyId, recordNumberSelect.value);
+                    const data = await response.json();
+                    companyNameInput.value = data.company_name || '';
+                    await updateRecordNumbers(companyId);
+                    deleteRecordBtn.disabled = false;
+                    deleteRecordBtn.classList.remove('disabled-btn');
                 } else {
-                    resetCompanyFields();
+                    softResetCompanyFields();
                 }
-
             } catch (error) {
-                console.error('Error fetching records:', error);
-                resetCompanyFields();
+                console.error('Error fetching company:', error);
+                softResetCompanyFields();
             }
         };
 
+        // Get CSRF Token
+        const getCSRFToken = () => {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        };
+
+        // Update record numbers
+        const updateRecordNumbers = async (companyId) => {
+            try {
+                const cacheKey = `records_${companyId}`;
+                if (stagesCache[cacheKey] && Date.now() - stagesCache[cacheKey].timestamp < 30000) {
+                    populateRecordNumbers(stagesCache[cacheKey].data);
+                    return;
+                }
+
+                const response = await fetch(`/api/records/${companyId}`, {
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
+                });
+                
+                if (response.ok) {
+                    const records = await response.json();
+                    stagesCache[cacheKey] = {
+                        data: records,
+                        timestamp: Date.now()
+                    };
+                    populateRecordNumbers(records);
+                }
+            } catch (error) {
+                console.error('Error fetching records:', error);
+            }
+        };
+
+        const populateRecordNumbers = (records) => {
+            recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
+            records.forEach(record => {
+                const option = document.createElement('option');
+                option.value = record.record_number;
+                option.textContent = `ردیف ${record.record_number}`;
+                recordNumberSelect.appendChild(option);
+            });
+        };
+
         // Handle record number change
-        const handleRecordNumberChange = async () => {
-            await updateStages(companyIdInput.value, recordNumberSelect.value);
+        const handleRecordNumberChange = async (e) => {
+            const value = e.target.value;
+            if (value === 'new') {
+                stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
+                deleteRecordBtn.disabled = true;
+                deleteRecordBtn.classList.add('disabled-btn');
+                currentRecordNumber = null;
+            } else {
+                currentRecordNumber = parseInt(value);
+                await updateStages(currentCompanyId, currentRecordNumber);
+                deleteRecordBtn.disabled = false;
+                deleteRecordBtn.classList.remove('disabled-btn');
+            }
         };
 
         // Update stages
         const updateStages = async (companyId, recordNumber) => {
-            stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
-            if (recordNumber !== 'new') {
-                try {
-                    const response = await fetch(`/api/financial_info/${companyId}`, {
-                        credentials: 'include'
-                    });
-                    if (response.ok) {
-                        const payload = await response.json();
-                        const financialInfos = Array.isArray(payload) ? payload : (payload.items || []);
-                        const stages = financialInfos
-                            .filter(info => info.record_number === parseInt(recordNumber))
-                            .map(info => info.stage);
-                        stages.forEach(stage => {
-                            const option = document.createElement('option');
-                            option.value = stage;
-                            option.textContent = `مرحله ${stage}`;
-                            stageSelect.appendChild(option);
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error fetching stages:', error);
+            try {
+                const cacheKey = `stages_${companyId}_${recordNumber}`;
+                if (stagesCache[cacheKey] && Date.now() - stagesCache[cacheKey].timestamp < 30000) {
+                    populateStages(stagesCache[cacheKey].data);
+                    return;
                 }
+
+                const response = await fetch(`/api/stages/${companyId}/${recordNumber}`, {
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
+                });
+                
+                if (response.ok) {
+                    const stages = await response.json();
+                    stagesCache[cacheKey] = {
+                        data: stages,
+                        timestamp: Date.now()
+                    };
+                    populateStages(stages);
+                }
+            } catch (error) {
+                console.error('Error fetching stages:', error);
             }
         };
 
+        const populateStages = (stages) => {
+            stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
+            stages.forEach(stage => {
+                const option = document.createElement('option');
+                option.value = stage.stage;
+                option.textContent = `مرحله ${stage.stage}`;
+                stageSelect.appendChild(option);
+            });
+        };
 
+        // Handle confirm button click
         const handleConfirm = async () => {
             const companyId = companyIdInput.value.trim();
+            const companyName = companyNameInput.value.trim();
             const recordNumber = recordNumberSelect.value;
             const stage = stageSelect.value;
 
             if (!companyId) {
+                companyIdInput.classList.add('border-red-500');
                 document.getElementById('company_id-error').style.display = 'block';
                 return;
             }
 
-            try {
-                // نمایش اسپینر یا حالت لودینگ
-                confirmBtn.disabled = true;
-                confirmBtn.innerHTML = '<span class="loading">در حال بررسی...</span>';
-
-                const [companyResponse, financialResponse] = await Promise.all([
-                    fetch(`/projects/${companyId}`, { credentials: 'include' }),
-                    recordNumber !== 'new' ?
-                        fetch(`/api/financial_info/${companyId}`, { credentials: 'include' }) :
-                        Promise.resolve({ ok: false })
-                ]);
-
-                if (!companyResponse.ok) {
-                    throw new Error('Company not found');
-                }
-
-                currentCompanyId = companyId;
-                currentRecordNumber = recordNumber === 'new' ? await getNextRecordNumber(companyId) : parseInt(recordNumber);
-                currentStage = stage === 'new' ? 1 : parseInt(stage);
-
-                // بارگذاری داده‌های مالی
-                await loadFinancialData(companyId, currentRecordNumber, currentStage);
-
-                // نمایش فرم مالی
-                initialForm.classList.add('hidden');
-                financialForm.classList.remove('hidden');
-                document.getElementById('financial-title').textContent = `مرحله ${currentStage} - ردیف ${currentRecordNumber}`;
-
-            } catch (error) {
-                console.error('Error confirming:', error);
-                alert('خطا در بارگذاری اطلاعات');
-            } finally {
-                // بازگرداندن دکمه به حالت عادی
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'تأیید';
+            if (!companyName) {
+                companyNameInput.classList.add('border-red-500');
+                document.getElementById('company_name-error').style.display = 'block';
+                return;
             }
+
+            currentCompanyId = companyId;
+            currentRecordNumber = recordNumber === 'new' ? null : parseInt(recordNumber);
+            currentStage = stage === 'new' ? 1 : parseInt(stage);
+
+            await loadFinancialData();
+            initialForm.classList.add('hidden');
+            financialForm.classList.remove('hidden');
         };
 
-        // Get next record number
-        const getNextRecordNumber = async (companyId) => {
-            try {
-                const response = await fetch(`/api/financial_info/${companyId}`, {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const payload = await response.json();
-                    const financialInfos = Array.isArray(payload) ? payload : (payload.items || []);
-                    const recordNumbers = financialInfos.map(info => info.record_number);
-                    return recordNumbers.length > 0 ? Math.max(...recordNumbers) + 1 : 1;
-                }
-                return 1;
+        // Load financial data با منطق نمایش بهبود یافته
+        const loadFinancialData = async () => {
+            const title = document.getElementById('financial-title');
+            const recordText = currentRecordNumber ? `ردیف ${currentRecordNumber}` : 'ردیف جدید';
+            const stageText = currentStage ? `مرحله ${currentStage}` : 'مرحله جدید';
+            title.textContent = `${companyNameInput.value} - ${recordText} - ${stageText}`;
 
-            } catch (error) {
-                console.error('Error getting next record number:', error);
-                return 1;
+            // تنظیم وضعیت فیلدها بر اساس مرحله
+            const fixedFields = document.getElementById('fixed-fields');
+            const variableFields = document.getElementById('variable-fields');
+            const calcFields = document.getElementById('calc-fields');
+
+            // همیشه محاسبات نمایش داده می‌شوند (فقط readonly)
+            calcFields.style.display = 'block';
+
+            if (currentStage === 1) {
+                // Stage 1: فیلدهای ثابت قابل ویرایش، متغیرها مخفی
+                fixedFields.style.display = 'block';
+                variableFields.style.display = 'none';
+                enableFixedFields();
+            } else {
+                // Stage > 1: فیلدهای ثابت فقط خواندنی، متغیرها نمایش داده می‌شوند
+                fixedFields.style.display = 'block';
+                variableFields.style.display = 'block';
+                disableFixedFields();
+
+                // بارگذاری داده‌های Stage 1 برای نمایش
+                await loadStage1Data();
             }
+
+            // بارگذاری داده‌های موجود
+            await loadExistingFinancialData();
+            handleInvoiceTypeChange();
+            await calculateFields();
         };
 
-        // Load financial data - اصلاح شرط برای نمایش مقدار صفر
-        // Load financial data - اصلاح شرط برای حالت stage>1
-        const loadFinancialData = async (companyId, recordNumber, stage) => {
+        const enableFixedFields = () => {
+            const fixedInputs = document.querySelectorAll('#fixed-fields input, #fixed-fields select');
+            fixedInputs.forEach(input => {
+                input.disabled = false;
+                input.classList.remove('readonly');
+            });
+        };
+
+        const disableFixedFields = () => {
+            const fixedInputs = document.querySelectorAll('#fixed-fields input, #fixed-fields select');
+            fixedInputs.forEach(input => {
+                input.disabled = true;
+                input.classList.add('readonly');
+            });
+        };
+
+        const loadStage1Data = async () => {
+            if (!currentCompanyId || !currentRecordNumber) return;
+
             try {
-                clearFinancialForm(stage > 1); // غیرفعال نگه داشتن فیلدهای ثابت در مراحل بالاتر از ۱
-
-                const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stage}`, {
-                    credentials: 'include'
+                const response = await fetch(`/api/financial/${currentCompanyId}/${currentRecordNumber}/1`, {
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-
+                
                 if (response.ok) {
                     const data = await response.json();
+                    populateFixedFields(data);
+                }
+            } catch (error) {
+                console.error('Error loading stage 1 data:', error);
+            }
+        };
 
-                    const fixedFields = [
-                        'invoice_number', 'invoice_type', 'invoice_amount',
-                        'allocation_amount', 'request_number', 'request_date',
-                        'request_result', 'settlement_method'
-                    ];
+        const loadExistingFinancialData = async () => {
+            if (!currentCompanyId || !currentRecordNumber || !currentStage) return;
 
-                    fixedFields.forEach(field => {
-                        const input = document.getElementById(field);
-                        if (input && (data[field] !== undefined && data[field] !== null)) {
-                            if (['invoice_amount', 'allocation_amount'].includes(field)) {
-                                input.value = parseFloat(data[field]).toLocaleString('fa-IR');
-                            } else {
-                                input.value = data[field];
-                            }
-                        }
-                    });
-
-                    const variableFields = ['paid_amount', 'advance_amortization', 'partial_amortization'];
-                    variableFields.forEach(field => {
-                        const input = document.getElementById(field);
-                        if (input && (data[field] !== undefined && data[field] !== null)) {
-                            input.value = parseFloat(data[field]).toLocaleString('fa-IR');
-                        }
-                    });
-
-                    calculateFields(data);
-
-                    if (stage > 1) {
-                        disableFixedFields();
-                    }
-                } else {
-                    // ⬅️ جدید: اگر مرحله فعلی وجود ندارد و stage>1 است، داده‌های ثابت را از مرحله 1 بخوان
-                    if (stage > 1) {
-                        await loadFixedData(companyId, recordNumber);
-                        disableFixedFields();
-                    } else {
-                        enableFixedFields();
-                    }
+            try {
+                const response = await fetch(`/api/financial/${currentCompanyId}/${currentRecordNumber}/${currentStage}`, {
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    populateFinancialForm(data);
                 }
             } catch (error) {
                 console.error('Error loading financial data:', error);
             }
         };
 
+        const populateFixedFields = (data) => {
+            document.getElementById('invoice_number').value = data.invoice_number || '';
+            document.getElementById('invoice_type').value = data.invoice_type || 'پیش‌پرداخت';
+            document.getElementById('invoice_amount').value = data.invoice_amount ? formatNumber(data.invoice_amount) : '';
+            document.getElementById('allocation_amount').value = data.allocation_amount ? formatNumber(data.allocation_amount) : '';
+            document.getElementById('request_number').value = data.request_number || '';
+            document.getElementById('request_date').value = data.request_date || '';
+            document.getElementById('request_result').value = data.request_result || 'درحال بررسی';
+            document.getElementById('settlement_method').value = data.settlement_method || 'نقد';
+        };
 
-        // Load fixed data - اصلاح شرط برای نمایش مقدار صفر
-        const loadFixedData = async (companyId, recordNumber) => {
+        const populateFinancialForm = (data) => {
+            populateFixedFields(data);
+            document.getElementById('paid_amount').value = data.paid_amount ? formatNumber(data.paid_amount) : '';
+            document.getElementById('advance_amortization').value = data.advance_amortization ? formatNumber(data.advance_amortization) : '';
+            document.getElementById('partial_amortization').value = data.partial_amortization ? formatNumber(data.partial_amortization) : '';
+            document.getElementById('allocation_usage').value = data.allocation_usage ? formatNumber(data.allocation_usage) : '';
+        };
+
+        // Format numeric input با حفظ موقعیت کرسر
+        const formatNumericInput = (e) => {
+            const input = e.target;
+            const startPos = input.selectionStart;
+            const endPos = input.selectionEnd;
+            
+            let value = input.value;
+            const normalized = normalizeNumber(value);
+            
+            if (normalized && !isNaN(normalized)) {
+                const num = parseFloat(normalized);
+                input.value = formatNumber(num);
+                
+                // بازیابی موقعیت کرسر
+                const newLength = input.value.length;
+                const adjustment = input.value.length - value.length;
+                input.setSelectionRange(startPos + adjustment, endPos + adjustment);
+            } else if (value === '') {
+                input.value = '';
+            }
+        };
+
+        // محاسبات مالی با کش و abort controller
+        const calculateFields = async () => {
+            if (!currentCompanyId) return;
+
+            if (abortController) {
+                abortController.abort();
+            }
+            abortController = new AbortController();
+
             try {
-                const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/1`, {
-                    credentials: 'include'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    // پر کردن فیلدهای ثابت
-                    const fixedFields = [
-                        'invoice_number', 'invoice_type', 'invoice_amount',
-                        'allocation_amount', 'request_number', 'request_date',
-                        'request_result', 'settlement_method'
-                    ];
-
-                    fixedFields.forEach(field => {
-                        const input = document.getElementById(field);
-                        if (input && (data[field] !== undefined && data[field] !== null)) {
-                            // برای فیلدهای عددی، مقدار را به صورت فرمت شده نمایش بده
-                            if (['invoice_amount', 'allocation_amount'].includes(field)) {
-                                input.value = parseFloat(data[field]).toLocaleString('fa-IR');
-                            } else {
-                                input.value = data[field];
-                            }
+                // محاسبات سطح ردیف
+                if (currentRecordNumber) {
+                    const cacheKey = `record_${currentCompanyId}_${currentRecordNumber}`;
+                    let recordData;
+                    
+                    if (stagesCache[cacheKey] && Date.now() - stagesCache[cacheKey].timestamp < 30000) {
+                        recordData = stagesCache[cacheKey].data;
+                    } else {
+                        const response = await fetch(`/api/stages/${currentCompanyId}/${currentRecordNumber}`, {
+                            credentials: 'include',
+                            headers: { 'X-CSRF-Token': getCSRFToken() },
+                            signal: abortController.signal
+                        });
+                        
+                        if (response.ok) {
+                            recordData = await response.json();
+                            stagesCache[cacheKey] = {
+                                data: recordData,
+                                timestamp: Date.now()
+                            };
                         }
-                    });
-
-                    // غیرفعال کردن فیلدهای ثابت
-                    disableFixedFields();
-                }
-            } catch (error) {
-                console.error('Error loading fixed data:', error);
-            }
-        };
-
-        // Disable fixed fields
-        const disableFixedFields = () => {
-            const fixedFields = document.querySelectorAll('#fixed-fields input, #fixed-fields select');
-            fixedFields.forEach(field => {
-                field.disabled = true;
-                field.classList.add('readonly');
-            });
-        };
-
-        // Enable fixed fields
-        const enableFixedFields = () => {
-            const fixedFields = document.querySelectorAll('#fixed-fields input, #fixed-fields select');
-            fixedFields.forEach(field => {
-                field.disabled = false;
-                field.classList.remove('readonly');
-            });
-        };
-
-        // Clear financial form - اضافه کردن پارامتر keepFixedDisabled
-        const clearFinancialForm = (keepFixedDisabled = false) => {
-            const allFields = document.querySelectorAll('#financial-form-data input, #financial-form-data select');
-            allFields.forEach(field => {
-                if (!field.id.includes('remaining') && !field.id.includes('contractor') && !field.id.includes('total')) {
-                    field.value = '';
-                }
-            });
-
-            // فعال کردن همه فیلدها
-            allFields.forEach(field => {
-                field.disabled = false;
-                field.classList.remove('readonly');
-            });
-
-            // اگر پارامتر true باشد، فیلدهای ثابت را غیرفعال نگه دار
-            if (keepFixedDisabled) {
-                disableFixedFields();
-            }
-        };
-
-        // Calculate fields
-        const calculateFields = () => {
-            const invoiceAmount = getNum('invoice_amount');
-            const paidAmount = getNum('paid_amount');
-            const advanceAmortization = getNum('advance_amortization');
-            const partialAmortization = getNum('partial_amortization');
-            const allocationAmount = getNum('allocation_amount');
-
-            // مجموع پرداختی‌های ردیف (paid_amount)
-            const totalPaid = paidAmount; // در نسخه پیشرفته باید از تمام مراحل جمع بشه
-
-            // مجموع پیش‌پرداخت‌ها (فرض: در stage 1)
-            const totalAdvance = (document.getElementById('invoice_type').value === 'پیش‌پرداخت' ? invoiceAmount : 0);
-            const totalAdvanceAmort = advanceAmortization;
-
-            // مجموع علی‌الحساب‌ها
-            const totalPartial = (document.getElementById('invoice_type').value === 'علی‌الحساب' ? invoiceAmount : 0);
-            const totalPartialAmort = partialAmortization;
-
-            // فرمول‌ها
-            const remainingInvoice = Math.max(invoiceAmount - totalPaid, 0);
-            const remainingAdvance = Math.max(totalAdvance - totalAdvanceAmort, 0);
-            const remainingPartial = Math.max(totalPartial - totalPartialAmort, 0);
-
-            const balance = invoiceAmount - totalPaid;
-            const contractorCredit = balance < 0 ? Math.abs(balance) : 0;
-            const contractorDebit = balance >= 0 ? balance : 0;
-
-            const totalPaidInvoices = totalPaid; // برای تجمیعی واقعی باید از کل مراحل خوانده بشه
-
-            // نمایش در فیلدها
-            document.getElementById('remaining_invoice').value = remainingInvoice.toLocaleString('fa-IR');
-            document.getElementById('remaining_advance').value = remainingAdvance.toLocaleString('fa-IR');
-            document.getElementById('remaining_partial').value = remainingPartial.toLocaleString('fa-IR');
-            document.getElementById('contractor_credit').value = contractorCredit.toLocaleString('fa-IR');
-            document.getElementById('contractor_debit').value = contractorDebit.toLocaleString('fa-IR');
-            document.getElementById('total_paid_invoices').value = totalPaidInvoices.toLocaleString('fa-IR');
-        };
-
-
-        // Handle back financial
-        const handleBackFinancial = () => {
-            financialForm.classList.add('hidden');
-            initialForm.classList.remove('hidden');
-        };
-
-        // Save financial data - اصلاح برای عدم جهش در حالت PUT
-        const normalizeInvoiceType = (val) => {
-            if (!val) return null;
-
-            // تبدیل تمام نیم‌فاصله‌ها به فاصله معمولی
-            const cleaned = val.replace(/\u200c/g, ' ');
-
-            switch (cleaned) {
-                case 'پیش پرداخت':
-                    return 'پیش‌پرداخت';
-                case 'علی الحساب':
-                    return 'علی‌الحساب';
-                case 'موقت':
-                    return 'موقت';
-                case 'قطعی':
-                    return 'قطعی';
-                case 'تعدیل':
-                    return 'تعدیل';
-                default:
-                    return val;
-            }
-        };
-        // تابع ذخیره اطلاعات مالی
-        const saveFinancialData = async (isFinalSave) => {
-            try {
-                // ⚠️ FormData فیلدهای disabled رو نمی‌خونه → دستی بخونیم
-                const getVal = (id) => {
-                    const el = document.getElementById(id);
-                    return el ? el.value : '';
-                };
-                const getNum = (id) => {
-                    const v = getVal(id);
-                    const n = parseFloat(normalizeNumber(v));
-                    return isNaN(n) ? 0 : n;
-                };
-
-                // آماده‌سازی دیتا
-                const data = {
-                    company_id: currentCompanyId,
-                    record_number: currentRecordNumber,
-                    stage: currentStage,
-
-                    // فیلدهای ثابت
-                    invoice_number: getVal('invoice_number') || null,
-                    invoice_type: normalizeInvoiceType(getVal('invoice_type')), // ✅ نرمال‌سازی
-                    invoice_amount: getNum('invoice_amount'),
-                    allocation_amount: getNum('allocation_amount'),
-                    request_number: getVal('request_number') || null,
-                    request_date: getVal('request_date') || null,
-                    request_result: getVal('request_result') || null,
-                    settlement_method: getVal('settlement_method') || null,
-
-                    // فیلدهای مرحله‌ای
-                    paid_amount: getNum('paid_amount'),
-                    advance_amortization: getNum('advance_amortization'),
-                    partial_amortization: getNum('partial_amortization'),
-                };
-
-                // چک کردن رکورد موجود
-                const checkUrl = `/api/financial_info/${currentCompanyId}/${currentRecordNumber}/${currentStage}`;
-                const checkResponse = await fetch(checkUrl, { credentials: 'include' });
-
-                let method, url;
-                if (checkResponse.ok) {
-                    // رکورد وجود دارد → PUT
-                    method = 'PUT';
-                    url = checkUrl;
-                } else if (checkResponse.status === 404) {
-                    // رکورد وجود ندارد → POST
-                    method = 'POST';
-                    url = `/api/financial_info/`;
-                } else {
-                    const msg = await checkResponse.text().catch(() => '');
-                    throw new Error('خطا در بررسی موجودیت رکورد: ' + msg);
-                }
-
-                // ارسال درخواست
-                const response = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data),
-                    credentials: 'include'
-                });
-
-                if (response.ok) {
-                    alert('اطلاعات با موفقیت ذخیره شد ✅');
-
-                    if (method === 'POST' && !isFinalSave) {
-                        currentStage++;
-                        await loadFinancialData(currentCompanyId, currentRecordNumber, currentStage);
-                        document.getElementById('financial-title').textContent =
-                            `مرحله ${currentStage} - ردیف ${currentRecordNumber}`;
-                    } else if (isFinalSave) {
-                        handleBackFinancial();
                     }
-                } else {
-                    const msg = await response.text().catch(() => '');
-                    throw new Error('خطا در ذخیره اطلاعات: ' + msg);
+
+                    if (recordData) {
+                        await calculateRecordLevel(recordData);
+                    }
                 }
+
+                // محاسبات سطح شرکت
+                await calculateCompanyLevel();
             } catch (error) {
-                console.error('Error saving financial data:', error);
-                alert('خطا در ذخیره اطلاعات ❌');
+                if (error.name !== 'AbortError') {
+                    console.error('Error calculating fields:', error);
+                }
+            }
+        };
+
+        const calculateRecordLevel = async (stages) => {
+            // مرحله 1 (ثابت‌ها)
+            const s1 = stages.find(s => s.stage === 1);
+
+            // اگر کاربر در Stage 1 عددی تایپ کرده باشد، همان لحظه لحاظ شود
+            const invoiceAmountRecord =
+                (currentStage === 1) ? getNum('invoice_amount') : (s1?.invoice_amount || 0);
+            const allocationAmountRecord =
+                (currentStage === 1) ? getNum('allocation_amount') : (s1?.allocation_amount || 0);
+
+            // «تشخیص مرحلهٔ جاری» در همین ردیف
+            const isCurrent = (s) =>
+                currentRecordNumber && currentStage && s.stage === currentStage;
+
+            // خواندن ورودی‌های زنده مرحلهٔ جاری (ممکن است خالی باشند)
+            const livePaid = getNum('paid_amount');
+            const allocUsageRaw = document.getElementById('allocation_usage')?.value ?? '';
+            const normalizedAlloc = normalizeNumber(allocUsageRaw);
+            const liveAlloc = normalizedAlloc === '' ? null : parseFloat(normalizedAlloc);
+
+            // paid_sum با جایگزینی مقدار مرحلهٔ جاری
+            const paidSumRecord = stages.reduce((sum, s) => {
+                const v = isCurrent(s) ? livePaid : (s.paid_amount || 0);
+                return sum + (v || 0);
+            }, 0);
+
+            // مصرف تخصیص = اگر برای مرحلهٔ جاری allocation_usage وارد شده، همان؛
+            // در غیر این‌صورت fallback به paid_amount (منطق توافق‌شده)
+            const allocationConsumedRecord = stages.reduce((sum, s) => {
+                const base = (s.allocation_usage != null) ? s.allocation_usage : (s.paid_amount || 0);
+                const v = isCurrent(s) ? (liveAlloc != null ? liveAlloc : livePaid) : base;
+                return sum + (v || 0);
+            }, 0);
+
+            // مانده‌ها
+            const remainingInvoiceRaw = invoiceAmountRecord - paidSumRecord;
+            const remainingAllocationRaw = allocationAmountRecord - allocationConsumedRecord;
+
+            // نمایش اعداد و هشدارها (مثل قبل)
+            document.getElementById('remaining_invoice').value = formatNumber(Math.abs(remainingInvoiceRaw));
+            document.getElementById('remaining_allocation').value = formatNumber(Math.abs(remainingAllocationRaw));
+
+            const invoiceWarning = document.getElementById('remaining_invoice_warning');
+            const allocationWarning = document.getElementById('remaining_allocation_warning');
+
+            if (remainingInvoiceRaw < 0) {
+                invoiceWarning.textContent = 'پرداخت بیش از حد';
+                document.getElementById('remaining_invoice').classList.add('negative-value');
+            } else {
+                invoiceWarning.textContent = '';
+                document.getElementById('remaining_invoice').classList.remove('negative-value');
+            }
+
+            if (remainingAllocationRaw < 0) {
+                allocationWarning.textContent = 'تخصیص مازاد';
+                document.getElementById('remaining_allocation').classList.add('negative-value');
+            } else {
+                allocationWarning.textContent = '';
+                document.getElementById('remaining_allocation').classList.remove('negative-value');
             }
         };
 
 
+        // نسخهٔ کامل و اصلاح‌شدهٔ calculateCompanyLevel
+            // - شامل کش ۳۰ثانیه‌ای، AbortController، CSRF
+            // - لحاظ‌کردن ورودیِ مرحلهٔ جاری (قبل از ذخیره) در تمام جمع‌ها
+            // - رندر کامل به UI + هشدار «تخصیص مازاد (شرکت)»
 
-        // Handle view stages
-        const handleViewStages = async () => {
-            const companyId = companyIdInput.value.trim();
-            if (!companyId) {
-                alert('لطفاً ابتدا شناسه ملی شرکت را وارد کنید');
-                return;
-            }
+        async function calculateCompanyLevel() {
+            // ---------- Helpers ----------
+            const $ = (id) => document.getElementById(id);
+
+            const fmt = (n) => {
+                if (typeof window.formatNumber === 'function') return window.formatNumber(n);
+                try { return new Intl.NumberFormat('fa-IR').format(Math.round(n || 0)); }
+                catch { return String(n || 0); }
+            };
+
+            const _normalizeNumber = (v) => {
+                if (typeof window.normalizeNumber === 'function') return window.normalizeNumber(v);
+                if (v == null) return '';
+                const map = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9',
+                            '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+                let s = String(v).replace(/[۰-۹٠-٩]/g, d => map[d]);
+                s = s.replace(/[,\u060C\u066C\u00A0\u202F ]/g, ''); // , ، ٬ NBSP NNBSP space
+                s = s.replace(/[\u066B\u06D4]/g, '.');               // ٫/ؔ → .
+                return s.trim();
+            };
+
+            const _parseNum = (raw) => {
+                const s = _normalizeNumber(raw);
+                if (s === '' || s === '-') return 0;
+                const n = Number(s);
+                return Number.isFinite(n) ? n : 0;
+            };
+
+            const getNum = (id) => {
+                if (typeof window.getNum === 'function') return window.getNum(id);
+                const el = $(id);
+                return el ? _parseNum(el.value) : 0;
+            };
+
+            const getCSRFToken = () => {
+                if (typeof window.getCSRFToken === 'function') return window.getCSRFToken();
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta && meta.content) return meta.content;
+                const m = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+                return m ? decodeURIComponent(m[1]) : null;
+            };
+
+            const setVal = (id, val) => { const el = $(id); if (el) el.value = fmt(val); };
+            const toggle = (id, on) => { const el = $(id); if (el) el.style.display = on ? '' : 'none'; };
+            const toggleNegativeClass = (id, on) => { const el = $(id); if (el) el.classList.toggle('negative-value', !!on); };
+
+            // ---------- انتخاب‌های فعلی از DOM ----------
+            const currentCompanyId = $('company_id')?.value?.trim() || null;
+            const recSel = $('record_number')?.value;
+            const stageSel = $('stage')?.value; 
+            const currentRecordNumber = recSel && recSel !== 'new' ? Number(recSel) : null;
+            const currentStage = stageSel && stageSel !== 'new' ? Number(stageSel) : null;
+
+            if (!currentCompanyId) return;
+
+            // ---------- کش و دریافت مراحل شرکت ----------
+            const stagesCache = window.stagesCache || (window.stagesCache = {});
+
+
+            const cacheKey = `company_${currentCompanyId}`;
+            let allStages;
+
+            // هر بار فراخوانی: درخواست قبلی را لغو کنیم (اگر جایی استفاده می‌شود)
+            const abortController = new AbortController();
 
             try {
-                const response = await fetch(`/api/financial_info/${companyId}`, {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const payload = await response.json();
-                    const items = Array.isArray(payload) ? payload : (payload.items || []);
-                    displayStages(items);
-                    stagesModal.classList.add('modal-open');
+                if (stagesCache[cacheKey] && Date.now() - stagesCache[cacheKey].timestamp < 30000) {
+                allStages = stagesCache[cacheKey].data;
                 } else {
-                    throw new Error('خطا در دریافت اطلاعات مراحل');
+                const headers = {};
+                const csrf = getCSRFToken();
+                if (csrf) headers['X-CSRF-Token'] = csrf;
+
+                const response = await fetch(`/api/stages/${encodeURIComponent(currentCompanyId)}`, {
+                    credentials: 'include',
+                    headers,
+                    signal: abortController.signal
+                });
+
+                if (!response.ok) throw new Error('خطا در دریافت مراحل شرکت');
+
+                allStages = await response.json();
+                stagesCache[cacheKey] = { data: allStages, timestamp: Date.now() };
                 }
-
-            } catch (error) {
-                console.error('Error viewing stages:', error);
-                alert('خطا در دریافت اطلاعات مراحل');
+            } catch (err) {
+                // اگر خطایی رخ داد اما کش قدیمی داریم، از همان استفاده می‌کنیم
+                if (stagesCache[cacheKey]?.data) {
+                allStages = stagesCache[cacheKey].data;
+                console.warn('calculateCompanyLevel: استفاده از کش به‌دلیل خطای شبکه:', err);
+                } else {
+                console.error(err);
+                return; // چیزی برای محاسبه نداریم
+                }
             }
-        };
 
-        // Display stages - نمایش مقادیر صفر برای فیلدهای محاسباتی
-        const displayStages = (financialInfos) => {
+            // ---------- Stage1 های همهٔ ردیف‌ها ----------
+            const stage1Records = (allStages || []).filter(s => s && s.stage === 1);
+
+            // ---------- تشخیص «مرحلهٔ جاری» ----------
+            const isCurrent = (s) =>
+                currentCompanyId &&
+                currentRecordNumber != null &&
+                currentStage != null &&
+                s.record_number === currentRecordNumber &&
+                s.stage === currentStage;
+
+            // ---------- ورودی‌های زنده مرحلهٔ جاری ----------
+            const livePaid        = getNum('paid_amount');
+            const liveAdvAmort    = getNum('advance_amortization');
+            const liveParAmort    = getNum('partial_amortization');
+
+            const allocUsageRaw   = $('allocation_usage')?.value ?? '';
+            const normalizedAlloc = _normalizeNumber(allocUsageRaw);
+            const liveAlloc       = normalizedAlloc === '' ? null : Number(normalizedAlloc);
+
+            const liveInvoiceType = (currentStage === 1) ? $('invoice_type')?.value : null;
+            const liveInvAmt      = (currentStage === 1) ? getNum('invoice_amount')    : null;
+            const liveAllocAmt    = (currentStage === 1) ? getNum('allocation_amount') : null;
+
+            // ---------- جمع‌ها با جایگزینی «مرحلهٔ جاری» ----------
+            const totalPaid = allStages.reduce((sum, s) => {
+                const v = isCurrent(s) ? livePaid : (s.paid_amount || 0);
+                return sum + (v || 0);
+            }, 0);
+
+            const totalAdvanceAmort = allStages.reduce((sum, s) => {
+                const v = isCurrent(s) ? liveAdvAmort : (s.advance_amortization || 0);
+                return sum + (v || 0);
+            }, 0);
+
+            const totalPartialAmort = allStages.reduce((sum, s) => {
+                const v = isCurrent(s) ? liveParAmort : (s.partial_amortization || 0);
+                return sum + (v || 0);
+            }, 0);
+
+            // مجموع صورت‌وضعیت‌های Stage1 (نمای نقدی)
+            const totalInvoicesStage1 = stage1Records.reduce((sum, s) => {
+                const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
+                const amount = sIsCurrentS1 ? (liveInvAmt || 0) : (s.invoice_amount || 0);
+                return sum + (amount || 0);
+            }, 0);
+
+            // Σ پیش‌پرداخت @stage1
+            const totalAdvance = stage1Records.reduce((sum, s) => {
+                const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
+                const type = sIsCurrentS1 ? (liveInvoiceType || s.invoice_type) : s.invoice_type;
+                const amount = sIsCurrentS1 ? (liveInvAmt || 0) : (s.invoice_amount || 0);
+                return sum + ((type === 'پیش‌پرداخت') ? amount : 0);
+            }, 0);
+
+            // Σ علی‌الحساب @stage1
+            const totalPartial = stage1Records.reduce((sum, s) => {
+                const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
+                const type = sIsCurrentS1 ? (liveInvoiceType || s.invoice_type) : s.invoice_type;
+                const amount = sIsCurrentS1 ? (liveInvAmt || 0) : (s.invoice_amount || 0);
+                return sum + ((type === 'علی‌الحساب') ? amount : 0);
+            }, 0);
+
+            // Σ سقف تخصیص @stage1
+            const totalAllocation = stage1Records.reduce((sum, s) => {
+                const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
+                const amount = sIsCurrentS1 ? (liveAllocAmt || 0) : (s.allocation_amount || 0);
+                return sum + (amount || 0);
+            }, 0);
+
+            // Σ مصرف تخصیص (شرکت): ترجیح با allocation_usage؛ در غیر این‌صورت paid_amount
+            const totalAllocationConsumed = allStages.reduce((sum, s) => {
+                const base = (s.allocation_usage != null) ? s.allocation_usage : (s.paid_amount || 0);
+                const v = isCurrent(s) ? (liveAlloc != null ? liveAlloc : livePaid) : base;
+                return sum + (v || 0);
+            }, 0);
+
+            // ---------- خروجی‌های نهایی (نقدی) ----------
+            const remainingAdvanceRaw  = totalAdvance - totalAdvanceAmort;
+            const remainingPartialRaw  = totalPartial - totalPartialAmort;
+            const cashBalance          = totalInvoicesStage1 - totalPaid;
+            const contractorCredit     = Math.max(cashBalance, 0);
+            const contractorDebit      = Math.max(-cashBalance, 0);
+            const remainingAllocationCompanyRaw = totalAllocation - totalAllocationConsumed;
+
+            // ---------- رندر به UI ----------
+            setVal('total_paid_invoices', totalPaid);
+            setVal('remaining_advance', Math.max(remainingAdvanceRaw, 0));
+            setVal('remaining_partial', Math.max(remainingPartialRaw, 0));
+            setVal('contractor_credit', contractorCredit);
+            setVal('contractor_debit', contractorDebit);
+
+            // «مانده تخصیص (شرکت)» به‌صورت قدر مطلق + هشدار منفی
+            setVal('remaining_allocation_company', Math.abs(remainingAllocationCompanyRaw));
+            const warn = document.getElementById('remaining_allocation_company_warning');
+            if (warn) warn.textContent = remainingAllocationCompanyRaw < 0 ? 'تخصیص مازاد (سطح شرکت)' : '';
+            document.getElementById('remaining_allocation_company')
+                    .classList.toggle('negative-value', remainingAllocationCompanyRaw < 0);
+
+            toggleNegativeClass('remaining_allocation_company', remainingAllocationCompanyRaw < 0);
+
+            // (اختیاری) اگر لازم داری خروجی‌ها را برگردانی:
+            return {
+                totals: {
+                totalPaid,
+                totalInvoicesStage1,
+                totalAdvance, totalAdvanceAmort,
+                totalPartial, totalPartialAmort,
+                totalAllocation, totalAllocationConsumed,
+                },
+                remainingAdvanceRaw,
+                remainingPartialRaw,
+                cashBalance,
+                contractorCredit,
+                contractorDebit,
+                remainingAllocationCompanyRaw,
+            };
+            }
+
+
+        // نمایش مراحل با DOM امن (بدون innerHTML)
+        const displayStages = (stages) => {
             stagesTable.innerHTML = '';
 
-            financialInfos.forEach(info => {
-                const row = document.createElement('tr');
-                row.className = 'border-b dark:border-gray-700';
+            const createTableCell = (text) => {
+                const td = document.createElement('td');
+                td.className = 'p-2 text-center';
+                td.textContent = text ?? '-';
+                return td;
+            };
 
-                row.innerHTML = `
-                    <td class="p-2">${info.stage}</td>
-                    <td class="p-2">${info.invoice_number || ''}</td>
-                    <td class="p-2">${info.invoice_type || ''}</td>
-                    <td class="p-2">${(info.invoice_amount !== undefined && info.invoice_amount !== null) ? parseFloat(info.invoice_amount).toLocaleString('fa-IR') : ''}</td>
-                    <td class="p-2">${(info.paid_amount !== undefined && info.paid_amount !== null) ? parseFloat(info.paid_amount).toLocaleString('fa-IR') : ''}</td>
-                    <td class="p-2">${info.request_date || ''}</td>
-                    <td class="p-2">${info.request_result || ''}</td>
-                    <td class="p-2">
-                        <button class="delete-stage p-1 text-red-600 hover:text-red-800 dark:hover:text-red-400" data-company-id="${info.company_id}" data-record-number="${info.record_number}" data-stage="${info.stage}">
-                            حذف
-                        </button>
-                    </td>
-                `;
+            stages.forEach(stage => {
+                const row = document.createElement('tr');
+                row.className = 'border-t border-gray-200 dark:border-gray-700';
+
+                row.append(
+                    createTableCell(String(stage.stage)),
+                    createTableCell(stage.invoice_number),
+                    createTableCell(stage.invoice_type),
+                    createTableCell(stage.invoice_amount ? formatNumber(stage.invoice_amount) : '-'),
+                    createTableCell(stage.paid_amount ? formatNumber(stage.paid_amount) : '-'),
+                    createTableCell(stage.request_date),
+                    createTableCell(stage.request_result)
+                );
+
+                const actions = document.createElement('td');
+                actions.className = 'p-2 text-center';
+                const btn = document.createElement('button');
+                btn.className = 'delete-stage text-red-600 hover:text-red-800';
+                btn.dataset.stage = stage.stage;
+                btn.textContent = 'حذف';
+                actions.appendChild(btn);
+                row.appendChild(actions);
 
                 stagesTable.appendChild(row);
             });
@@ -1271,80 +1470,190 @@
             // اضافه کردن event listener برای دکمه‌های حذف
             document.querySelectorAll('.delete-stage').forEach(button => {
                 button.addEventListener('click', (e) => {
-                    const companyId = e.target.dataset.companyId;
-                    const recordNumber = e.target.dataset.recordNumber;
                     const stage = e.target.dataset.stage;
-                    deleteStage(companyId, recordNumber, stage);
+                    handleDeleteStage(stage);
                 });
             });
         };
 
-        // Delete stage
-        const deleteStage = async (companyId, recordNumber, stage) => {
-            if (!confirm('آیا از حذف این مرحله اطمینان دارید؟')) {
+        // Handle view stages
+        const handleViewStages = async () => {
+            if (!currentCompanyId || !currentRecordNumber) {
+                alert('لطفاً ابتدا شرکت و ردیف را انتخاب کنید.');
                 return;
             }
 
             try {
-                const response = await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stage}`, {
-                    method: 'DELETE',
-                    credentials: 'include'
+                const response = await fetch(`/api/stages/${currentCompanyId}/${currentRecordNumber}`, {
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-
+                
                 if (response.ok) {
-                    alert('مرحله با موفقیت حذف شد');
-                    stagesModal.classList.remove('modal-open');
-                    await updateRecordNumbers(companyId);
+                    const stages = await response.json();
+                    displayStages(stages);
+                    stagesModal.classList.add('modal-open');
+                    
+                    // تنظیم فوکوس روی دکمه بستن برای دسترسی‌پذیری
+                    setTimeout(() => closeStagesModal.focus(), 100);
                 } else {
-                    throw new Error('خطا در حذف مرحله');
+                    alert('خطا در بارگذاری مراحل.');
                 }
             } catch (error) {
-                console.error('Error deleting stage:', error);
-                alert('خطا در حذف مرحله');
+                console.error('Error fetching stages:', error);
+                alert('خطا در بارگذاری مراحل.');
             }
         };
 
-        // Handle delete record - حذف همه مراحل یک ردیف
-        const handleDeleteRecord = async () => {
-            const companyId = companyIdInput.value.trim();
-            const recordNumber = recordNumberSelect.value;
-
-            if (!companyId || recordNumber === 'new') {
-                alert('لطفاً ابتدا یک ردیف معتبر انتخاب کنید');
-                return;
-            }
-
-            if (!confirm('آیا از حذف تمام مراحل این ردیف اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) {
+        // Handle delete stage
+        const handleDeleteStage = async (stage) => {
+            if (!confirm(`آیا از حذف مرحله ${stage} اطمینان دارید؟`)) {
                 return;
             }
 
             try {
-                // دریافت تمام مراحل این ردیف
-                const response = await fetch(`/api/financial_info/${companyId}`, {
+                const response = await fetch(`/api/financial/${currentCompanyId}/${currentRecordNumber}/${stage}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
+                });
+                
+                if (response.ok) {
+                    // پاک کردن کش مربوطه
+                    Object.keys(stagesCache).forEach(key => {
+                        if (key.includes(currentCompanyId)) {
+                            delete stagesCache[key];
+                        }
+                    });
+                    
+                    await updateStages(currentCompanyId, currentRecordNumber);
+                    await handleViewStages(); // Refresh the modal
+                    await calculateFields(); // Update calculations
+                } else {
+                    alert('خطا در حذف مرحله.');
+                }
+            } catch (error) {
+                console.error('Error deleting stage:', error);
+                alert('خطا در حذف مرحله.');
+            }
+        };
+
+        // Handle delete record
+        const handleDeleteRecord = async () => {
+            if (!currentCompanyId || !currentRecordNumber) {
+                alert('لطفاً ابتدا شرکت و ردیف را انتخاب کنید.');
+                return;
+            }
+
+            if (!confirm(`آیا از حذف ردیف ${currentRecordNumber} اطمینان دارید؟ این عمل تمام مراحل مربوطه را حذف می‌کند.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/records/${currentCompanyId}/${currentRecordNumber}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
+                });
+                
+                if (response.ok) {
+                    // پاک کردن کش مربوطه
+                    Object.keys(stagesCache).forEach(key => {
+                        if (key.includes(currentCompanyId)) {
+                            delete stagesCache[key];
+                        }
+                    });
+                    
+                    await updateRecordNumbers(currentCompanyId);
+                    recordNumberSelect.value = 'new';
+                    currentRecordNumber = null;
+                    deleteRecordBtn.disabled = true;
+                    deleteRecordBtn.classList.add('disabled-btn');
+                    alert('ردیف با موفقیت حذف شد.');
+                } else {
+                    alert('خطا در حذف ردیف.');
+                }
+            } catch (error) {
+                console.error('Error deleting record:', error);
+                alert('خطا در حذف ردیف.');
+            }
+        };
+
+        // Handle back from financial form
+        const handleBackFinancial = () => {
+            financialForm.classList.add('hidden');
+            initialForm.classList.remove('hidden');
+            // پاک کردن کش هنگام بازگشت
+            stagesCache = {};
+        };
+
+        // Save financial data با سرور-ساید numbering
+        const saveFinancialData = async (goBack) => {
+            if (!validateFinancialInputs()) {
+                return;
+            }
+
+            const formData = new FormData(financialFormData);
+            const data = {
+                company_id: currentCompanyId,
+                record_number: currentRecordNumber, // سرور این را نادیده می‌گیرد اگر null باشد
+                stage: currentStage
+            };
+
+            // تبدیل form data به object
+            for (let [key, value] of formData.entries()) {
+                if (['invoice_amount', 'allocation_amount', 'paid_amount', 
+                     'advance_amortization', 'partial_amortization', 'allocation_usage'].includes(key)) {
+                    data[key] = parseFloat(normalizeNumber(value)) || 0;
+                } else {
+                    data[key] = value;
+                }
+            }
+
+            try {
+                const response = await fetch('/api/financial', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCSRFToken()
+                    },
+                    body: JSON.stringify(data),
                     credentials: 'include'
                 });
 
                 if (response.ok) {
-                    const payload = await response.json();
-                    const items = Array.isArray(payload) ? payload : (payload.items || []);
-                    const recordStages = items.filter(info => info.record_number === parseInt(recordNumber));
-
-                    // حذف تک‌تک مراحل
-                    for (const stageInfo of recordStages) {
-                        await fetch(`/api/financial_info/${companyId}/${recordNumber}/${stageInfo.stage}`, {
-                            method: 'DELETE',
-                            credentials: 'include'
-                        });
+                    const result = await response.json();
+                    // پاک کردن کش مربوطه
+                    Object.keys(stagesCache).forEach(key => {
+                        if (key.includes(currentCompanyId)) {
+                            delete stagesCache[key];
+                        }
+                    });
+                    
+                    // به‌روزرسانی شماره‌های اختصاص داده شده توسط سرور
+                    if (result.record_number) {
+                        currentRecordNumber = result.record_number;
+                    }
+                    if (result.stage) {
+                        currentStage = result.stage;
                     }
 
-                    alert('تمامی مراحل ردیف با موفقیت حذف شدند');
-                    await updateRecordNumbers(companyId);
+                    alert('اطلاعات با موفقیت ذخیره شد.');
+
+                    if (goBack) {
+                        handleBackFinancial();
+                    } else {
+                        // رفتن به مرحله بعدی
+                        currentStage++;
+                        await loadFinancialData();
+                    }
                 } else {
-                    throw new Error('خطا در دریافت اطلاعات مراحل');
+                    const error = await response.json();
+                    alert(error.message || 'خطا در ذخیره اطلاعات.');
                 }
             } catch (error) {
-                console.error('Error deleting record:', error);
-                alert('خطا در حذف ردیف');
+                console.error('Error saving financial data:', error);
+                alert('خطا در ذخیره اطلاعات.');
             }
         };
 
