@@ -1,0 +1,102 @@
+
+📦 app
+├─ .gitignore
+├─ README.md
+├─ __init__.py
+├─ api
+│  ├─ __init__.py
+│  └─ endpoints
+│     ├─ __init__.py
+│     ├─ financial_info.py
+│     ├─ guarantees.py
+│     ├─ invoice_records.py
+│     ├─ projects.py
+│     ├─ reminders.py
+│     ├─ reports.py
+│     └─ social_security.py
+├─ database
+│  ├─ __init__.py
+│  ├─ db.py
+│  └─ models
+│     ├─ ProjectDB.py
+│     ├─ __init__.py
+│     ├─ financial_info_DB.py
+│     ├─ guarantee.py
+│     ├─ invoice_record.py
+│     ├─ password.py
+│     ├─ reminder.py
+│     └─ social_security.py
+├─ main.py
+├─ requirements.txt
+├─ schemas
+│  ├─ __init__.py
+│  ├─ financial_info_schema.py
+│  ├─ guarantee.py
+│  ├─ invoice_record.py
+│  ├─ project.py
+│  ├─ reminder.py
+│  └─ social_security.py
+├─ services
+│  ├─ financial_service.py
+│  ├─ guarantee_service.py
+│  ├─ project_service.py
+│  ├─ reminder_service.py
+│  ├─ report_service.py
+│  └─ social_security_service.py
+├─ static
+│  ├─ css
+│  │  └─ main.css
+│  └─ js
+│     └─ main.js
+├─ templates
+│  ├─ add-project.html
+│  ├─ companies.html
+│  ├─ financial_details.html
+│  ├─ guarantees.html
+│  ├─ index.html
+│  ├─ login.html
+│  ├─ previous
+│  │  ├─ financial_info
+│  │  │  ├─ create.html
+│  │  │  ├─ edit.html
+│  │  │  └─ list.html
+│  │  ├─ fonts
+│  │  │  └─ Dana.ttf
+│  │  ├─ guarantees
+│  │  │  ├─ create.html
+│  │  │  ├─ edit.html
+│  │  │  └─ list.html
+│  │  ├─ invoice_records
+│  │  │  ├─ create.html
+│  │  │  ├─ edit.html
+│  │  │  └─ list.html
+│  │  ├─ projects
+│  │  │  ├─ create.html
+│  │  │  ├─ edit.html
+│  │  │  └─ list.html
+│  │  ├─ reminders
+│  │  │  ├─ create.html
+│  │  │  ├─ edit.html
+│  │  │  └─ list.html
+│  │  └─ social_security
+│  │     ├─ create.html
+│  │     ├─ edit.html
+│  │     └─ list.html
+│  ├─ reminders.html
+│  ├─ reports.html
+│  ├─ settings.html
+│  ├─ social_security.html
+│  └─ static
+│     ├─ css
+│     │  └─ base.css
+│     ├─ fonts
+│     │  └─ Dana.ttf
+│     └─ js
+│        ├─ auth.js
+│        ├─ nav.js
+│        ├─ pages
+│        │  ├─ add-project.js
+│        │  └─ companies.js
+│        ├─ sidebar.js
+│        └─ theme.js
+└─ test_financial_info.py
