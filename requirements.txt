@@ -4,3 +4,5 @@ sqlalchemy
 pydantic > 2.0.0
 jinja2
 jdatetime
+pandas
+openpyxl
