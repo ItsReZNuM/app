@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from app.database.db import get_db
-from app.schemas.social_security import SocialSecurity, SocialSecurityCreate, SocialSecurityUpdate
-from app.services.social_security_service import SocialSecurityService
+from database.db import get_db
+from schemas.social_security import SocialSecurity, SocialSecurityCreate, SocialSecurityUpdate
+from services.social_security_service import SocialSecurityService
 from fastapi.responses import JSONResponse
 
 router = APIRouter(

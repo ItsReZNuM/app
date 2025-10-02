@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String
-from app.database.db import Base
+from database.db import Base
 
 class Password(Base):
     __tablename__ = "passwords"

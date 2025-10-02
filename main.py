@@ -3,18 +3,18 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
-from app.database.db import Base, engine, get_db
-from app.api.endpoints import projects, financial_info, guarantees, social_security, reminders
-from app.database.models.password import Password
-from app.database.models.financial_info_DB import FinancialInfo as FinancialInfoModel
-from app.database.models.ProjectDB import Project
-from app.database.models.guarantee import Guarantee
-from app.database.models.social_security import SocialSecurity
-from app.database.models.reminder import Reminder
-from app.services.financial_service import calculate_financial_metrics
-from app.schemas.financial_info_schema import FinancialInfo
-from app.api.endpoints import reports
-from app.schemas.project import Project as ProjectSchema
+from database.db import Base, engine, get_db
+from api.endpoints import projects, financial_info, guarantees, social_security, reminders
+from database.models.password import Password
+from database.models.financial_info_DB import FinancialInfo as FinancialInfoModel
+from database.models.ProjectDB import Project
+from database.models.guarantee import Guarantee
+from database.models.social_security import SocialSecurity
+from database.models.reminder import Reminder
+from services.financial_service import calculate_financial_metrics
+from schemas.financial_info_schema import FinancialInfo
+from api.endpoints import reports
+from schemas.project import Project as ProjectSchema
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -23,8 +23,8 @@ from fastapi.exception_handlers import http_exception_handler, request_validatio
 from fastapi.exceptions import RequestValidationError
 import traceback
 import logging
-from app.schemas.project import ProjectWithoutFinancials as ProjectLite
-from app.schemas.financial_info_schema import FinancialInfo
+from schemas.project import ProjectWithoutFinancials as ProjectLite
+from schemas.financial_info_schema import FinancialInfo
 from typing import Optional, Dict, List
 
 # Create database tables

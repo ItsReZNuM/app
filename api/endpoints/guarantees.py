@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from app.database.db import get_db
-from app.schemas.guarantee import Guarantee, GuaranteeCreate, GuaranteeUpdate
-from app.services.guarantee_service import (
+from database.db import get_db
+from schemas.guarantee import Guarantee, GuaranteeCreate, GuaranteeUpdate
+from services.guarantee_service import (
     create_or_update_guarantee,
     get_guarantee_by_id,
     get_guarantees_by_company,

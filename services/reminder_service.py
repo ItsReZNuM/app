@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
-from app.database.models.reminder import Reminder as ReminderDB
-from app.schemas.reminder import ReminderCreate, ReminderUpdate
+from database.models.reminder import Reminder as ReminderDB
+from schemas.reminder import ReminderCreate, ReminderUpdate
 
 
 class ReminderService:

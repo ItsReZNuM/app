@@ -203,6 +203,9 @@
         .field-disabled {
             display: none;
         }
+        /* اضافه به CSS همین صفحه */
+        .field-disabled { display: none; }
+
     </style>
 </head>
 
@@ -615,25 +618,36 @@
 
         // اعتبارسنجی مقادیر مالی
         const validateFinancialInputs = () => {
-            const paidAmount = getNum('paid_amount');
-            const allocationUsage = getNum('allocation_usage');
-            const invoiceAmount = getNum('invoice_amount');
+            const paidAmount       = getNum('paid_amount');
+            const allocationUsage  = getNum('allocation_usage');
+            const invoiceAmount    = getNum('invoice_amount');
             const allocationAmount = getNum('allocation_amount');
 
-            // اعتبارسنجی مقادیر منفی
+            // 1) منفی نباشند
             if (paidAmount < 0 || allocationUsage < 0 || invoiceAmount < 0 || allocationAmount < 0) {
                 alert('مقادیر نمی‌توانند منفی باشند');
                 return false;
             }
 
-            // اعتبارسنجی allocation_usage ≤ paid_amount
+            // 2) مصرف تخصیص ≤ مبلغ پرداخت‌شده
             if (allocationUsage > paidAmount) {
                 alert('مصرف تخصیص نمی‌تواند بیشتر از مبلغ پرداخت‌شده باشد');
                 return false;
             }
 
+            // 3) پرداخت بیش از مانده صورت‌وضعیت ممنوع
+            // توجه: calculateFields پیش‌تر صدا زده می‌شود و remaining_invoice را پر می‌کند
+            const riEl = document.getElementById('remaining_invoice');
+            const remainingRaw = riEl && riEl.dataset ? parseFloat(riEl.dataset.raw) : null;
+            if (remainingRaw != null && remainingRaw < 0) {
+                alert('مبلغ پرداخت‌شده از مانده صورت‌وضعیت بیشتر است');
+                return false;
+            }
+
+
             return true;
-        };
+            };
+
 
         // Initialize the application
         const init = () => {
@@ -745,6 +759,11 @@
         };
 
         const handleInvoiceTypeChange = () => {
+            if (window.currentStage === 1) {
+                document.getElementById('advance-amortization-wrapper')?.classList.add('field-disabled');
+                document.getElementById('partial-amortization-wrapper')?.classList.add('field-disabled');
+                return;
+            }
             const invoiceType = document.getElementById('invoice_type').value;
             const advanceWrapper = document.getElementById('advance-amortization-wrapper');
             const partialWrapper = document.getElementById('partial-amortization-wrapper');
@@ -827,15 +846,18 @@
         // Load company info
         const loadCompanyInfo = async (companyId) => {
             try {
-                const response = await fetch(`/api/companies/${companyId}`, {
+                const response = await fetch(`/api/financial/${companyId}`, {
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
                 
                 if (response.ok) {
-                    const data = await response.json();
-                    companyNameInput.value = data.company_name || '';
-                    await updateRecordNumbers(companyId);
+                    const payload = await response.json();
+                    const items = Array.isArray(payload) ? payload : (payload.items || []);
+                    // اگر در آیتم‌ها name دارید، استفاده کن؛ در غیر اینصورت مقدار ورودی را دست‌نخورده بگذار
+                    const anyName = items.find(x => x.company_name)?.company_name;
+                    if (anyName) companyNameInput.value = anyName;
+                                        await updateRecordNumbers(companyId);
                     deleteRecordBtn.disabled = false;
                     deleteRecordBtn.classList.remove('disabled-btn');
                 } else {
@@ -853,6 +875,25 @@
             return meta ? meta.getAttribute('content') : '';
         };
 
+        // محاسبهٔ شمارهٔ ردیف بعدی بر اساس داده‌های شرکت
+        async function getNextRecordNumber(companyId) {
+        try {
+            const res = await fetch(`/api/financial/${encodeURIComponent(companyId)}`, {
+            credentials: 'include',
+            headers: { 'X-CSRF-Token': getCSRFToken() }
+            });
+            if (!res.ok) return 1;
+
+            const payload = await res.json();
+            const items = Array.isArray(payload) ? payload : (payload.items || []);
+            const nums = [...new Set(items.map(r => parseInt(r.record_number, 10)).filter(Number.isFinite))];
+            return nums.length ? Math.max(...nums) + 1 : 1;
+        } catch {
+            return 1;
+        }
+        }
+
+
         // Update record numbers
         const updateRecordNumbers = async (companyId) => {
             try {
@@ -862,17 +903,15 @@
                     return;
                 }
 
-                const response = await fetch(`/api/records/${companyId}`, {
+                const response = await fetch(`/api/financial/${companyId}`, {
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
                 
                 if (response.ok) {
-                    const records = await response.json();
-                    stagesCache[cacheKey] = {
-                        data: records,
-                        timestamp: Date.now()
-                    };
+                    const payload = await response.json();
+                    const records = Array.isArray(payload) ? payload : (payload.items || []);
+                    stagesCache[cacheKey] = { data: records, timestamp: Date.now() };
                     populateRecordNumbers(records);
                 }
             } catch (error) {
@@ -882,10 +921,11 @@
 
         const populateRecordNumbers = (records) => {
             recordNumberSelect.innerHTML = '<option value="new">ثبت جدید</option>';
-            records.forEach(record => {
+            const uniqueNumbers = [...new Set((records || []).map(r => parseInt(r.record_number, 10)))].filter(Number.isFinite);
+            uniqueNumbers.forEach(n => {
                 const option = document.createElement('option');
-                option.value = record.record_number;
-                option.textContent = `ردیف ${record.record_number}`;
+                option.value = String(n);
+                option.textContent = `ردیف ${n}`;
                 recordNumberSelect.appendChild(option);
             });
         };
@@ -915,17 +955,15 @@
                     return;
                 }
 
-                const response = await fetch(`/api/stages/${companyId}/${recordNumber}`, {
+                const response = await fetch(`/api/financial/${companyId}/${recordNumber}`, {
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
                 
                 if (response.ok) {
-                    const stages = await response.json();
-                    stagesCache[cacheKey] = {
-                        data: stages,
-                        timestamp: Date.now()
-                    };
+                    const payload = await response.json();
+                    const stages = Array.isArray(payload) ? payload : (payload.items || []);
+                    stagesCache[cacheKey] = { data: stages, timestamp: Date.now() };
                     populateStages(stages);
                 }
             } catch (error) {
@@ -935,7 +973,7 @@
 
         const populateStages = (stages) => {
             stageSelect.innerHTML = '<option value="new">مرحله جدید</option>';
-            stages.forEach(stage => {
+            (stages || []).forEach(stage => {
                 const option = document.createElement('option');
                 option.value = stage.stage;
                 option.textContent = `مرحله ${stage.stage}`;
@@ -987,18 +1025,21 @@
             calcFields.style.display = 'block';
 
             if (currentStage === 1) {
-                // Stage 1: فیلدهای ثابت قابل ویرایش، متغیرها مخفی
                 fixedFields.style.display = 'block';
-                variableFields.style.display = 'none';
+                variableFields.style.display = 'grid';   // paid_amount هم دیده شود
                 enableFixedFields();
-            } else {
-                // Stage > 1: فیلدهای ثابت فقط خواندنی، متغیرها نمایش داده می‌شوند
-                fixedFields.style.display = 'block';
-                variableFields.style.display = 'block';
-                disableFixedFields();
 
-                // بارگذاری داده‌های Stage 1 برای نمایش
-                await loadStage1Data();
+                // در مرحله ۱، فقط فیلدهای استهلاک را پنهان کن، نه مبلغ پرداخت‌شده
+                document.getElementById('advance-amortization-wrapper')?.classList.add('field-disabled');
+                document.getElementById('partial-amortization-wrapper')?.classList.add('field-disabled');
+                // paid_amount و allocation_usage را نمایش بده (اگر wrapper اختصاصی داری، remove کن)
+                // document.getElementById('paid-amount-wrapper')?.classList.remove('field-disabled');
+                // document.getElementById('allocation-usage-wrapper')?.classList.remove('field-disabled');
+            } else {
+                fixedFields.style.display = 'block';
+                variableFields.style.display = 'grid';
+                // اجازه بده handleInvoiceTypeChange بر اساس نوع صورت‌حساب، یکی از استهلاک‌ها را نمایش دهد
+                handleInvoiceTypeChange();
             }
 
             // بارگذاری داده‌های موجود
@@ -1118,18 +1159,16 @@
                     if (stagesCache[cacheKey] && Date.now() - stagesCache[cacheKey].timestamp < 30000) {
                         recordData = stagesCache[cacheKey].data;
                     } else {
-                        const response = await fetch(`/api/stages/${currentCompanyId}/${currentRecordNumber}`, {
+                        const response = await fetch(`/api/financial/${currentCompanyId}/${currentRecordNumber}`, {
                             credentials: 'include',
                             headers: { 'X-CSRF-Token': getCSRFToken() },
                             signal: abortController.signal
                         });
                         
                         if (response.ok) {
-                            recordData = await response.json();
-                            stagesCache[cacheKey] = {
-                                data: recordData,
-                                timestamp: Date.now()
-                            };
+                            const payload = await response.json();
+                            recordData = Array.isArray(payload) ? payload : (payload.items || []);
+                            stagesCache[cacheKey] = { data: recordData, timestamp: Date.now() };
                         }
                     }
 
@@ -1186,8 +1225,13 @@
             const remainingAllocationRaw = allocationAmountRecord - allocationConsumedRecord;
 
             // نمایش اعداد و هشدارها (مثل قبل)
-            document.getElementById('remaining_invoice').value = formatNumber(Math.abs(remainingInvoiceRaw));
-            document.getElementById('remaining_allocation').value = formatNumber(Math.abs(remainingAllocationRaw));
+            const ri = document.getElementById('remaining_invoice');
+            ri.value = formatNumber(Math.abs(remainingInvoiceRaw));
+            ri.dataset.raw = String(remainingInvoiceRaw);
+
+            const ra = document.getElementById('remaining_allocation');
+            ra.value = formatNumber(Math.abs(remainingAllocationRaw));
+            ra.dataset.raw = String(remainingAllocationRaw);
 
             const invoiceWarning = document.getElementById('remaining_invoice_warning');
             const allocationWarning = document.getElementById('remaining_allocation_warning');
@@ -1288,7 +1332,7 @@
                 const csrf = getCSRFToken();
                 if (csrf) headers['X-CSRF-Token'] = csrf;
 
-                const response = await fetch(`/api/stages/${encodeURIComponent(currentCompanyId)}`, {
+                const response = await fetch(`/api/financial/${encodeURIComponent(currentCompanyId)}`, {
                     credentials: 'include',
                     headers,
                     signal: abortController.signal
@@ -1296,7 +1340,8 @@
 
                 if (!response.ok) throw new Error('خطا در دریافت مراحل شرکت');
 
-                allStages = await response.json();
+                const payload = await response.json();
+                allStages = Array.isArray(payload) ? payload : (payload.items || []);
                 stagesCache[cacheKey] = { data: allStages, timestamp: Date.now() };
                 }
             } catch (err) {
@@ -1484,18 +1529,16 @@
             }
 
             try {
-                const response = await fetch(`/api/stages/${currentCompanyId}/${currentRecordNumber}`, {
+                const response = await fetch(`/api/financial/${currentCompanyId}/${currentRecordNumber}`, {
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
                 
                 if (response.ok) {
-                    const stages = await response.json();
+                    const payload = await response.json();
+                    const stages = Array.isArray(payload) ? payload : (payload.items || []);
                     displayStages(stages);
                     stagesModal.classList.add('modal-open');
-                    
-                    // تنظیم فوکوس روی دکمه بستن برای دسترسی‌پذیری
-                    setTimeout(() => closeStagesModal.focus(), 100);
                 } else {
                     alert('خطا در بارگذاری مراحل.');
                 }
@@ -1550,7 +1593,7 @@
             }
 
             try {
-                const response = await fetch(`/api/records/${currentCompanyId}/${currentRecordNumber}`, {
+                const response = await fetch(`/api/financial/${currentCompanyId}/${currentRecordNumber}`, {
                     method: 'DELETE',
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
@@ -1611,7 +1654,7 @@
             }
 
             try {
-                const response = await fetch('/api/financial', {
+                const response = await fetch('/api/financial/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

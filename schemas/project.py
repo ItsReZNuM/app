@@ -44,7 +44,7 @@ class Project(ProjectBase):
 
 # رفع forward reference با استفاده از lazy import
 try:
-    financial_info_module = importlib.import_module("app.schemas.financial_info_schema")
+    financial_info_module = importlib.import_module("schemas.financial_info_schema")
     Project.update_forward_refs(FinancialInfo=financial_info_module.FinancialInfo)
 except ImportError as e:
     raise ImportError(f"خطا در بارگذاری ماژول FinancialInfo: {str(e)}")

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
-from app.database.db import Base
+from database.db import Base
 
 class Guarantee(Base):
     __tablename__ = "guarantees"

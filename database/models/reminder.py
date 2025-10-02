@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
-from app.database.db import Base # فرض بر این است که Base از این مسیر وارد می‌شود
+from database.db import Base # فرض بر این است که Base از این مسیر وارد می‌شود
 
 class Reminder(Base):
     __tablename__ = "reminders"

@@ -5,17 +5,35 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Optional
 import logging
 
-from app.database.db import get_db
-from app.database.models.financial_info_DB import FinancialInfo as FinancialInfoModel
-from app.schemas.financial_info_schema import (
+from database.db import get_db
+from database.models.financial_info_DB import FinancialInfo as FinancialInfoModel
+from schemas.financial_info_schema import (
     FinancialInfoResponse,
     FinancialInfoCreate,
     FinancialInfoUpdate,
     FinancialInfoListResponse,  # اگر در اسکیما نبود می‌توانید حذفش کنید
 )
-from app.services.financial_service import calculate_financial_metrics
+# --- dynamic import for calc fn to avoid ImportError ---
+try:
+    import services.financial_service as _fin_svc  # type: ignore
+except Exception:
+    _fin_svc = None
 
-router = APIRouter(prefix="/financial_info", tags=["financial_info"])
+
+def _resolve_calc_fn():
+    if _fin_svc:
+        for _name in ("calculate_financial_metrics", "compute_financial_metrics", "calculate_metrics"):
+            _fn = getattr(_fin_svc, _name, None)
+            if callable(_fn):
+                return _fn
+    raise ImportError(
+        "services.financial_service must expose one of: calculate_financial_metrics / compute_financial_metrics / calculate_metrics"
+    )
+
+_calc_financial_metrics = _resolve_calc_fn()  # use this instead of direct import
+
+# تغییر ضروری برای هم‌راست شدن با فرانت: مسیرها زیر /api/financial قرار بگیرند
+router = APIRouter(prefix="/financial", tags=["financial"])  # قبلاً: "/financial_info"
 
 # ----------------------------
 # Helpers
@@ -38,6 +56,8 @@ def _as_record(model: FinancialInfoModel) -> Dict:
         "invoice_amount": _to_float(model.invoice_amount),
         "allocation_amount": _to_float(model.allocation_amount),
         "paid_amount": _to_float(model.paid_amount),
+        # 🔧 استفاده از فیلد allocation_usage اگر موجود باشد
+        "allocation_usage": _to_float(getattr(model, "allocation_usage", 0.0)),
         "settlement_method": model.settlement_method or None,
         "advance_amortization": _to_float(model.advance_amortization),
         "partial_amortization": _to_float(model.partial_amortization),
@@ -45,7 +65,7 @@ def _as_record(model: FinancialInfoModel) -> Dict:
 
 def _calc_for_current_stage(
     db: Session,
-    company_id: int,
+    company_id: str,
     record_number: int,
     current_stage: int,
     override_current: Optional[Dict] = None,
@@ -78,7 +98,7 @@ def _calc_for_current_stage(
 
     # اجرای سرویس محاسباتی
     logging.debug("Calculating metrics for records: %s", records)
-    results = calculate_financial_metrics(records)
+    results = _calc_financial_metrics(records)
     logging.debug("Calculation results: %s", results)
 
     # انتخاب نتیجه مربوط به stage جاری
@@ -131,7 +151,7 @@ def get_financial_info(
     response_model=FinancialInfoListResponse,  # اگر در اسکیما ندارید، می‌توانید لیست ساده برگردانید
 )
 def list_financial_infos(
-    company_id: int,
+    company_id: str,
     record_number: int,
     db: Session = Depends(get_db),
 ):
@@ -165,7 +185,6 @@ def get_financial_info_by_company(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"خطا در دریافت اطلاعات مالی شرکت: {str(e)}"
         )
-
 
 
 @router.post(
@@ -208,6 +227,8 @@ def create_financial_info(
             request_result=financial_info.request_result,
             settlement_method=financial_info.settlement_method,
             paid_amount=_to_float(financial_info.paid_amount),
+            # 🔧 فیلد جدید: مصرف تخصیص
+            allocation_usage=_to_float(getattr(financial_info, "allocation_usage", 0.0)),
             advance_amortization=_to_float(financial_info.advance_amortization),
             partial_amortization=_to_float(financial_info.partial_amortization),
         )
@@ -222,6 +243,8 @@ def create_financial_info(
             "invoice_amount": _to_float(obj.invoice_amount),
             "allocation_amount": _to_float(obj.allocation_amount),
             "paid_amount": _to_float(obj.paid_amount),
+            # 🔧 لحاظ‌کردن مصرف تخصیص در محاسبات
+            "allocation_usage": _to_float(getattr(obj, "allocation_usage", 0.0)),
             "advance_amortization": _to_float(obj.advance_amortization),
             "partial_amortization": _to_float(obj.partial_amortization),
         }
@@ -258,7 +281,7 @@ def create_financial_info(
     response_model=FinancialInfoResponse,
 )
 def update_financial_info(
-    company_id: int,
+    company_id: str,
     record_number: int,
     stage: int,
     financial_info: FinancialInfoUpdate,
@@ -288,6 +311,8 @@ def update_financial_info(
             obj.advance_amortization = _to_float(financial_info.advance_amortization)
         if financial_info.partial_amortization is not None:
             obj.partial_amortization = _to_float(financial_info.partial_amortization)
+        if financial_info.allocation_usage is not None:
+            obj.allocation_usage = _to_float(financial_info.allocation_usage)
         if financial_info.request_number is not None:
             obj.request_number = financial_info.request_number
         if financial_info.request_date is not None:
@@ -296,7 +321,6 @@ def update_financial_info(
             obj.request_result = financial_info.request_result
         if financial_info.settlement_method is not None:
             obj.settlement_method = financial_info.settlement_method
-
 
         # ساخت override از مقادیر جدید مرحلهٔ جاری
         override_current = {
@@ -308,6 +332,8 @@ def update_financial_info(
             "invoice_amount": _to_float(obj.invoice_amount),
             "allocation_amount": _to_float(obj.allocation_amount),
             "paid_amount": _to_float(obj.paid_amount),
+            # 🔧 لحاظ‌کردن مصرف تخصیص در محاسبات
+            "allocation_usage": _to_float(getattr(obj, "allocation_usage", 0.0)),
             "advance_amortization": _to_float(obj.advance_amortization),
             "partial_amortization": _to_float(obj.partial_amortization),
         }

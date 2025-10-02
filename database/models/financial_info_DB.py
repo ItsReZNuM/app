@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
-from app.database.db import Base
+from database.db import Base
 
 class FinancialInfo(Base):
     __tablename__ = "financial_info"
@@ -18,6 +18,7 @@ class FinancialInfo(Base):
     settlement_method = Column(String, nullable=True)
     advance_amortization = Column(Float, default=0.0)
     partial_amortization = Column(Float, default=0.0)
+    allocation_usage = Column(Float, default=0.0)
     paid_amount = Column(Float, default=0.0)
     remaining_invoice = Column(Float, default=0.0)
     remaining_advance = Column(Float, default=0.0)

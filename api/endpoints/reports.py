@@ -7,8 +7,8 @@ from datetime import date
 import base64
 import io
 
-from app.database.db import get_db
-from app.services.report_service import ReportService
+from database.db import get_db
+from services.report_service import ReportService
 
 router = APIRouter(
     prefix="/api/reports",

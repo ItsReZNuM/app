@@ -97,6 +97,7 @@ class FinancialInfoBase(BaseModel):
 
     # مقادیر مرحله‌ای
     paid_amount: float = Field(..., ge=0, description="مبلغ پرداخت‌شده در این مرحله")
+    allocation_usage: Optional[float] = Field(0, ge=0, description="مصرف تخصیص در این مرحله")
     advance_amortization: Optional[float] = Field(0, ge=0, description="استهلاک پیش‌پرداخت در این مرحله")
     partial_amortization: Optional[float] = Field(0, ge=0, description="استهلاک علی‌الحساب در این مرحله")
 
@@ -165,6 +166,7 @@ class FinancialInfoUpdate(BaseModel):
     settlement_method: Optional[str]
 
     paid_amount: Optional[float]
+    allocation_usage: Optional[float]
     advance_amortization: Optional[float]
     partial_amortization: Optional[float]
 

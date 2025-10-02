@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.database.models.social_security import SocialSecurity
-from app.database.models.ProjectDB import Project
+from database.models.social_security import SocialSecurity
+from database.models.ProjectDB import Project
 import locale
 from typing import Dict, Any, Optional, List
 from sqlalchemy.exc import SQLAlchemyError

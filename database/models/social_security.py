@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
-from app.database.db import Base
+from database.db import Base
 
 class SocialSecurity(Base):
     __tablename__ = "social_security"

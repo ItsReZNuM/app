@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.database.models.ProjectDB import Project
+from database.models.ProjectDB import Project
 from sqlalchemy import or_
 import locale
 

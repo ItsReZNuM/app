@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from fastapi import status
-from app.database.models.guarantee import Guarantee
-from app.database.models.ProjectDB import Project
+from database.models.guarantee import Guarantee
+from database.models.ProjectDB import Project
 import locale
 from typing import Dict, Any, List
 
