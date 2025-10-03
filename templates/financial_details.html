@@ -203,9 +203,11 @@
         .field-disabled {
             display: none;
         }
-        /* اضافه به CSS همین صفحه */
-        .field-disabled { display: none; }
 
+        /* اضافه به CSS همین صفحه */
+        .field-disabled {
+            display: none;
+        }
     </style>
 </head>
 
@@ -398,7 +400,8 @@
                         </div>
                         <div>
                             <label for="remaining_allocation"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده تخصیص (ردیف)</label>
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده تخصیص
+                                (ردیف)</label>
                             <input type="text" id="remaining_allocation" name="remaining_allocation"
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
                                 readonly>
@@ -406,7 +409,8 @@
                         </div>
                         <div>
                             <label for="remaining_allocation_company"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده تخصیص (شرکت)</label>
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">مانده تخصیص
+                                (شرکت)</label>
                             <input type="text" id="remaining_allocation_company" name="remaining_allocation_company"
                                 class="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg readonly dark:bg-gray-700 dark:text-gray-100"
                                 readonly>
@@ -618,9 +622,9 @@
 
         // اعتبارسنجی مقادیر مالی
         const validateFinancialInputs = () => {
-            const paidAmount       = getNum('paid_amount');
-            const allocationUsage  = getNum('allocation_usage');
-            const invoiceAmount    = getNum('invoice_amount');
+            const paidAmount = getNum('paid_amount');
+            const allocationUsage = getNum('allocation_usage');
+            const invoiceAmount = getNum('invoice_amount');
             const allocationAmount = getNum('allocation_amount');
 
             // 1) منفی نباشند
@@ -646,7 +650,7 @@
 
 
             return true;
-            };
+        };
 
 
         // Initialize the application
@@ -665,7 +669,7 @@
                     credentials: 'include',
                     signal: AbortSignal.timeout(5000)
                 });
-                
+
                 if (response.status === 401) {
                     window.location.href = '/login';
                 } else if (!response.ok) {
@@ -711,32 +715,49 @@
         };
 
         // Initialize event listeners
+        // Initialize event listeners
         const initEventListeners = () => {
             toggleSidebarOpen.addEventListener('click', toggleSidebar);
             toggleSidebarClosed.addEventListener('click', toggleSidebar);
             window.addEventListener('resize', handleResize);
 
-            // Numeric fields formatting + real-time calculation با debounce
-            const numericFields = ['invoice_amount', 'allocation_amount', 'paid_amount', 
-                                 'advance_amortization', 'partial_amortization', 'allocation_usage'];
-            
+            // فیلدهای عددی که باید محاسبه را تریگر کنند
+            const numericFields = [
+                'invoice_amount',
+                'allocation_amount',
+                'paid_amount',
+                'advance_amortization',
+                'partial_amortization',
+                'allocation_usage'
+            ];
+
             const debouncedCalculate = debounce(calculateFields, 400);
-            
+
             numericFields.forEach(field => {
                 const input = document.getElementById(field);
                 if (input) {
+                    // وقتی کاربر تایپ می‌کند
                     input.addEventListener('input', (e) => {
                         formatNumericInput(e);
                         debouncedCalculate();
                     });
+                    // وقتی مقدار با paste یا تغییر خارجی بیاد
+                    input.addEventListener('change', () => calculateFields());
+                    // وقتی از فیلد خارج میشه
+                    input.addEventListener('blur', () => calculateFields());
                 }
             });
 
+            // تغییر نوع صورت‌وضعیت
             const invoiceTypeInput = document.getElementById('invoice_type');
             if (invoiceTypeInput) {
-                invoiceTypeInput.addEventListener('change', handleInvoiceTypeChange);
+                invoiceTypeInput.addEventListener('change', () => {
+                    handleInvoiceTypeChange();
+                    calculateFields(); // ← محاسبه همزمان
+                });
             }
 
+            // سایر کنترل‌ها
             companyIdInput.addEventListener('input', handleCompanyIdInput);
             companyNameInput.addEventListener('input', handleCompanyNameInput);
             recordNumberSelect.addEventListener('change', handleRecordNumberChange);
@@ -756,7 +777,11 @@
                     stagesModal.classList.remove('modal-open');
                 }
             });
+
+            // محاسبه اولیه وقتی فرم لود شد
+            calculateFields();
         };
+
 
         const handleInvoiceTypeChange = () => {
             if (window.currentStage === 1) {
@@ -771,10 +796,10 @@
             if (invoiceType === 'پیش‌پرداخت') {
                 advanceWrapper.classList.remove('field-disabled');  // نمایش استهلاک پیش‌پرداخت
                 partialWrapper.classList.add('field-disabled');     // پنهان کردن استهلاک علی‌الحساب
-                } else if (invoiceType === 'علی‌الحساب') {
+            } else if (invoiceType === 'علی‌الحساب') {
                 partialWrapper.classList.remove('field-disabled');  // نمایش استهلاک علی‌الحساب
                 advanceWrapper.classList.add('field-disabled');     // پنهان کردن استهلاک پیش‌پرداخت
-                } else {
+            } else {
                 advanceWrapper.classList.remove('field-disabled');
                 partialWrapper.classList.remove('field-disabled');
             }
@@ -850,14 +875,14 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     const payload = await response.json();
                     const items = Array.isArray(payload) ? payload : (payload.items || []);
                     // اگر در آیتم‌ها name دارید، استفاده کن؛ در غیر اینصورت مقدار ورودی را دست‌نخورده بگذار
                     const anyName = items.find(x => x.company_name)?.company_name;
                     if (anyName) companyNameInput.value = anyName;
-                                        await updateRecordNumbers(companyId);
+                    await updateRecordNumbers(companyId);
                     deleteRecordBtn.disabled = false;
                     deleteRecordBtn.classList.remove('disabled-btn');
                 } else {
@@ -877,20 +902,20 @@
 
         // محاسبهٔ شمارهٔ ردیف بعدی بر اساس داده‌های شرکت
         async function getNextRecordNumber(companyId) {
-        try {
-            const res = await fetch(`/api/financial/${encodeURIComponent(companyId)}`, {
-            credentials: 'include',
-            headers: { 'X-CSRF-Token': getCSRFToken() }
-            });
-            if (!res.ok) return 1;
+            try {
+                const res = await fetch(`/api/financial/${encodeURIComponent(companyId)}`, {
+                    credentials: 'include',
+                    headers: { 'X-CSRF-Token': getCSRFToken() }
+                });
+                if (!res.ok) return 1;
 
-            const payload = await res.json();
-            const items = Array.isArray(payload) ? payload : (payload.items || []);
-            const nums = [...new Set(items.map(r => parseInt(r.record_number, 10)).filter(Number.isFinite))];
-            return nums.length ? Math.max(...nums) + 1 : 1;
-        } catch {
-            return 1;
-        }
+                const payload = await res.json();
+                const items = Array.isArray(payload) ? payload : (payload.items || []);
+                const nums = [...new Set(items.map(r => parseInt(r.record_number, 10)).filter(Number.isFinite))];
+                return nums.length ? Math.max(...nums) + 1 : 1;
+            } catch {
+                return 1;
+            }
         }
 
 
@@ -907,7 +932,7 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     const payload = await response.json();
                     const records = Array.isArray(payload) ? payload : (payload.items || []);
@@ -959,7 +984,7 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     const payload = await response.json();
                     const stages = Array.isArray(payload) ? payload : (payload.items || []);
@@ -1072,7 +1097,7 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     populateFixedFields(data);
@@ -1090,7 +1115,7 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     populateFinancialForm(data);
@@ -1124,14 +1149,14 @@
             const input = e.target;
             const startPos = input.selectionStart;
             const endPos = input.selectionEnd;
-            
+
             let value = input.value;
             const normalized = normalizeNumber(value);
-            
+
             if (normalized && !isNaN(normalized)) {
                 const num = parseFloat(normalized);
                 input.value = formatNumber(num);
-                
+
                 // بازیابی موقعیت کرسر
                 const newLength = input.value.length;
                 const adjustment = input.value.length - value.length;
@@ -1142,20 +1167,57 @@
         };
 
         // محاسبات مالی با کش و abort controller
+        // محاسبه‌ها (نسخه‌ی اصلاح‌شده)
         const calculateFields = async () => {
-            if (!currentCompanyId) return;
+            // هلسپر برای محاسبه‌ی سریعِ سطح ردیف از روی ورودی‌های زنده (بدون فراخوانی API)
+            const computeRecordLiveOnly = () => {
+                const invAmt = getNum('invoice_amount');
+                const allocAmt = getNum('allocation_amount');
+                const paid = getNum('paid_amount');
 
-            if (abortController) {
-                abortController.abort();
+                const allocUsageRaw = document.getElementById('allocation_usage')?.value ?? '';
+                const normalizedAlloc = normalizeNumber(allocUsageRaw);
+                const allocUsed = (normalizedAlloc === '' || isNaN(parseFloat(normalizedAlloc)))
+                    ? paid                // fallback: اگر مصرف تخصیص خالی بود، برابر paid
+                    : parseFloat(normalizedAlloc);
+
+                const remainingInvoiceRaw = invAmt - paid;
+                const remainingAllocRaw = allocAmt - allocUsed;
+
+                // آپدیت UI + هشدارها (مثل مسیر قبلی)
+                const riEl = document.getElementById('remaining_invoice');
+                riEl.value = formatNumber(Math.abs(remainingInvoiceRaw));
+                riEl.dataset.raw = String(remainingInvoiceRaw);
+                document.getElementById('remaining_invoice_warning').textContent =
+                    remainingInvoiceRaw < 0 ? 'پرداخت بیش از حد' : '';
+                riEl.classList.toggle('negative-value', remainingInvoiceRaw < 0);
+
+                const raEl = document.getElementById('remaining_allocation');
+                raEl.value = formatNumber(Math.abs(remainingAllocRaw));
+                raEl.dataset.raw = String(remainingAllocRaw);
+                document.getElementById('remaining_allocation_warning').textContent =
+                    remainingAllocRaw < 0 ? 'تخصیص مازاد' : '';
+                raEl.classList.toggle('negative-value', remainingAllocRaw < 0);
+            };
+
+            // اگر شرکت هنوز ست نشده، دست‌کم محاسبه‌ی ردیف را از روی ورودی‌ها انجام بده و برگرد
+            if (!currentCompanyId) {
+                computeRecordLiveOnly();
+                return;
             }
-            abortController = new AbortController();
 
-            try {
-                // محاسبات سطح ردیف
-                if (currentRecordNumber) {
+            // اگر در حالت «ثبت جدید» هستیم، سطح ردیف را از روی ورودی‌های زنده حساب کن
+            if (!currentRecordNumber) {
+                computeRecordLiveOnly();
+            } else {
+                // مسیر قبلی برای ردیف‌های موجود
+                if (abortController) abortController.abort();
+                abortController = new AbortController();
+
+                try {
                     const cacheKey = `record_${currentCompanyId}_${currentRecordNumber}`;
                     let recordData;
-                    
+
                     if (stagesCache[cacheKey] && Date.now() - stagesCache[cacheKey].timestamp < 30000) {
                         recordData = stagesCache[cacheKey].data;
                     } else {
@@ -1164,27 +1226,22 @@
                             headers: { 'X-CSRF-Token': getCSRFToken() },
                             signal: abortController.signal
                         });
-                        
                         if (response.ok) {
                             const payload = await response.json();
                             recordData = Array.isArray(payload) ? payload : (payload.items || []);
                             stagesCache[cacheKey] = { data: recordData, timestamp: Date.now() };
                         }
                     }
-
-                    if (recordData) {
-                        await calculateRecordLevel(recordData);
-                    }
-                }
-
-                // محاسبات سطح شرکت
-                await calculateCompanyLevel();
-            } catch (error) {
-                if (error.name !== 'AbortError') {
-                    console.error('Error calculating fields:', error);
+                    if (recordData) await calculateRecordLevel(recordData);
+                } catch (err) {
+                    if (err.name !== 'AbortError') console.error('Error calculating record level:', err);
                 }
             }
+
+            // سطح شرکت مثل قبل
+            await calculateCompanyLevel();
         };
+
 
         const calculateRecordLevel = async (stages) => {
             // مرحله 1 (ثابت‌ها)
@@ -1197,23 +1254,29 @@
                 (currentStage === 1) ? getNum('allocation_amount') : (s1?.allocation_amount || 0);
 
             // «تشخیص مرحلهٔ جاری» در همین ردیف
-            const isCurrent = (s) =>
-                currentRecordNumber && currentStage && s.stage === currentStage;
+            const isCurrent = (s) => {
+                // اگر ردیف جدید است (currentRecordNumber=null) → فقط stage جاری
+                if (currentRecordNumber == null) {
+                    return s.stage === currentStage;
+                }
+                // ردیف موجود → stage و شماره ردیف باید برابر باشند
+                return s.stage === currentStage && s.record_number === currentRecordNumber;
+            };
 
-            // خواندن ورودی‌های زنده مرحلهٔ جاری (ممکن است خالی باشند)
+            // خواندن ورودی‌های زنده مرحلهٔ جاری
             const livePaid = getNum('paid_amount');
             const allocUsageRaw = document.getElementById('allocation_usage')?.value ?? '';
             const normalizedAlloc = normalizeNumber(allocUsageRaw);
             const liveAlloc = normalizedAlloc === '' ? null : parseFloat(normalizedAlloc);
 
-            // paid_sum با جایگزینی مقدار مرحلهٔ جاری
+            // مجموع پرداخت‌ها با جایگزینی مرحله جاری
             const paidSumRecord = stages.reduce((sum, s) => {
                 const v = isCurrent(s) ? livePaid : (s.paid_amount || 0);
                 return sum + (v || 0);
             }, 0);
 
-            // مصرف تخصیص = اگر برای مرحلهٔ جاری allocation_usage وارد شده، همان؛
-            // در غیر این‌صورت fallback به paid_amount (منطق توافق‌شده)
+            // مصرف تخصیص = اگر برای مرحله جاری allocation_usage وارد شده، همان؛
+            // در غیر این‌صورت fallback به paid_amount
             const allocationConsumedRecord = stages.reduce((sum, s) => {
                 const base = (s.allocation_usage != null) ? s.allocation_usage : (s.paid_amount || 0);
                 const v = isCurrent(s) ? (liveAlloc != null ? liveAlloc : livePaid) : base;
@@ -1224,7 +1287,7 @@
             const remainingInvoiceRaw = invoiceAmountRecord - paidSumRecord;
             const remainingAllocationRaw = allocationAmountRecord - allocationConsumedRecord;
 
-            // نمایش اعداد و هشدارها (مثل قبل)
+            // نمایش اعداد و هشدارها
             const ri = document.getElementById('remaining_invoice');
             ri.value = formatNumber(Math.abs(remainingInvoiceRaw));
             ri.dataset.raw = String(remainingInvoiceRaw);
@@ -1238,127 +1301,130 @@
 
             if (remainingInvoiceRaw < 0) {
                 invoiceWarning.textContent = 'پرداخت بیش از حد';
-                document.getElementById('remaining_invoice').classList.add('negative-value');
+                ri.classList.add('negative-value');
             } else {
                 invoiceWarning.textContent = '';
-                document.getElementById('remaining_invoice').classList.remove('negative-value');
+                ri.classList.remove('negative-value');
             }
 
             if (remainingAllocationRaw < 0) {
                 allocationWarning.textContent = 'تخصیص مازاد';
-                document.getElementById('remaining_allocation').classList.add('negative-value');
+                ra.classList.add('negative-value');
             } else {
                 allocationWarning.textContent = '';
-                document.getElementById('remaining_allocation').classList.remove('negative-value');
+                ra.classList.remove('negative-value');
             }
         };
 
 
         // نسخهٔ کامل و اصلاح‌شدهٔ calculateCompanyLevel
-            // - شامل کش ۳۰ثانیه‌ای، AbortController، CSRF
-            // - لحاظ‌کردن ورودیِ مرحلهٔ جاری (قبل از ذخیره) در تمام جمع‌ها
-            // - رندر کامل به UI + هشدار «تخصیص مازاد (شرکت)»
+        // - شامل کش ۳۰ثانیه‌ای، AbortController، CSRF
+        // - لحاظ‌کردن ورودیِ مرحلهٔ جاری (قبل از ذخیره) در تمام جمع‌ها
+        // - رندر کامل به UI + هشدار «تخصیص مازاد (شرکت)»
 
+        // نسخه اصلاح‌شده‌ی calculateCompanyLevel
         async function calculateCompanyLevel() {
-            // ---------- Helpers ----------
             const $ = (id) => document.getElementById(id);
-
-            const fmt = (n) => {
-                if (typeof window.formatNumber === 'function') return window.formatNumber(n);
-                try { return new Intl.NumberFormat('fa-IR').format(Math.round(n || 0)); }
-                catch { return String(n || 0); }
-            };
-
-            const _normalizeNumber = (v) => {
-                if (typeof window.normalizeNumber === 'function') return window.normalizeNumber(v);
-                if (v == null) return '';
-                const map = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9',
-                            '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-                let s = String(v).replace(/[۰-۹٠-٩]/g, d => map[d]);
-                s = s.replace(/[,\u060C\u066C\u00A0\u202F ]/g, ''); // , ، ٬ NBSP NNBSP space
-                s = s.replace(/[\u066B\u06D4]/g, '.');               // ٫/ؔ → .
-                return s.trim();
-            };
-
-            const _parseNum = (raw) => {
-                const s = _normalizeNumber(raw);
-                if (s === '' || s === '-') return 0;
-                const n = Number(s);
-                return Number.isFinite(n) ? n : 0;
-            };
-
+            const fmt = (n) => new Intl.NumberFormat('fa-IR').format(Math.round(n || 0));
             const getNum = (id) => {
-                if (typeof window.getNum === 'function') return window.getNum(id);
                 const el = $(id);
-                return el ? _parseNum(el.value) : 0;
+                if (!el) return 0;
+                const n = parseFloat(normalizeNumber(el.value));
+                return isNaN(n) ? 0 : n;
             };
 
-            const getCSRFToken = () => {
-                if (typeof window.getCSRFToken === 'function') return window.getCSRFToken();
-                const meta = document.querySelector('meta[name="csrf-token"]');
-                if (meta && meta.content) return meta.content;
-                const m = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
-                return m ? decodeURIComponent(m[1]) : null;
-            };
-
-            const setVal = (id, val) => { const el = $(id); if (el) el.value = fmt(val); };
-            const toggle = (id, on) => { const el = $(id); if (el) el.style.display = on ? '' : 'none'; };
-            const toggleNegativeClass = (id, on) => { const el = $(id); if (el) el.classList.toggle('negative-value', !!on); };
-
-            // ---------- انتخاب‌های فعلی از DOM ----------
             const currentCompanyId = $('company_id')?.value?.trim() || null;
             const recSel = $('record_number')?.value;
-            const stageSel = $('stage')?.value; 
+            const stageSel = $('stage')?.value;
             const currentRecordNumber = recSel && recSel !== 'new' ? Number(recSel) : null;
             const currentStage = stageSel && stageSel !== 'new' ? Number(stageSel) : null;
 
+            // اگر ثبت جدید هستیم → محاسبه مستقیم از روی ورودی‌های زنده
+            if (!currentRecordNumber) {
+                const paid = getNum('paid_amount');
+                const advAmort = getNum('advance_amortization');
+                const parAmort = getNum('partial_amortization');
+                const invAmt = getNum('invoice_amount');
+                const allocAmt = getNum('allocation_amount');
+                const invType = $('invoice_type')?.value;
+
+                // پیش‌پرداخت یا علی‌الحساب
+                const totalAdvance = (invType === 'پیش‌پرداخت') ? invAmt : 0;
+                const totalPartial = (invType === 'علی‌الحساب') ? invAmt : 0;
+
+                // مصرف تخصیص
+                const allocUsageRaw = $('allocation_usage')?.value ?? '';
+                const normalizedAlloc = normalizeNumber(allocUsageRaw);
+                const allocUsed = (normalizedAlloc === '' || isNaN(parseFloat(normalizedAlloc)))
+                    ? paid : parseFloat(normalizedAlloc);
+
+                // محاسبه
+                const remainingAdvanceRaw = totalAdvance - advAmort;
+                const remainingPartialRaw = totalPartial - parAmort;
+                const cashBalance = invAmt - paid;
+                const contractorCredit = Math.max(cashBalance, 0);
+                const contractorDebit = Math.max(-cashBalance, 0);
+                const remainingAllocCompanyRaw = allocAmt - allocUsed;
+
+                // نمایش در UI
+                $('total_paid_invoices').value = fmt(paid);
+                $('remaining_advance').value = fmt(Math.max(remainingAdvanceRaw, 0));
+                $('remaining_partial').value = fmt(Math.max(remainingPartialRaw, 0));
+                $('contractor_credit').value = fmt(contractorCredit);
+                $('contractor_debit').value = fmt(contractorDebit);
+
+                const raComp = $('remaining_allocation_company');
+                raComp.value = fmt(Math.abs(remainingAllocCompanyRaw));
+                $('remaining_allocation_company_warning').textContent =
+                    remainingAllocCompanyRaw < 0 ? 'تخصیص مازاد (سطح شرکت)' : '';
+                raComp.classList.toggle('negative-value', remainingAllocCompanyRaw < 0);
+
+                return; // چون ثبت جدید هست، دیگه ادامه لازم نیست
+            }
+
+            // --- حالت ردیف‌های ذخیره‌شده (قدیمی) ---
             if (!currentCompanyId) return;
 
-            // ---------- کش و دریافت مراحل شرکت ----------
             const stagesCache = window.stagesCache || (window.stagesCache = {});
-
-
             const cacheKey = `company_${currentCompanyId}`;
             let allStages;
 
-            // هر بار فراخوانی: درخواست قبلی را لغو کنیم (اگر جایی استفاده می‌شود)
             const abortController = new AbortController();
 
             try {
                 if (stagesCache[cacheKey] && Date.now() - stagesCache[cacheKey].timestamp < 30000) {
-                allStages = stagesCache[cacheKey].data;
+                    allStages = stagesCache[cacheKey].data;
                 } else {
-                const headers = {};
-                const csrf = getCSRFToken();
-                if (csrf) headers['X-CSRF-Token'] = csrf;
+                    const headers = {};
+                    const csrf = getCSRFToken();
+                    if (csrf) headers['X-CSRF-Token'] = csrf;
 
-                const response = await fetch(`/api/financial/${encodeURIComponent(currentCompanyId)}`, {
-                    credentials: 'include',
-                    headers,
-                    signal: abortController.signal
-                });
+                    const response = await fetch(`/api/financial/${encodeURIComponent(currentCompanyId)}`, {
+                        credentials: 'include',
+                        headers,
+                        signal: abortController.signal
+                    });
 
-                if (!response.ok) throw new Error('خطا در دریافت مراحل شرکت');
+                    if (!response.ok) throw new Error('خطا در دریافت مراحل شرکت');
 
-                const payload = await response.json();
-                allStages = Array.isArray(payload) ? payload : (payload.items || []);
-                stagesCache[cacheKey] = { data: allStages, timestamp: Date.now() };
+                    const payload = await response.json();
+                    allStages = Array.isArray(payload) ? payload : (payload.items || []);
+                    stagesCache[cacheKey] = { data: allStages, timestamp: Date.now() };
                 }
             } catch (err) {
-                // اگر خطایی رخ داد اما کش قدیمی داریم، از همان استفاده می‌کنیم
                 if (stagesCache[cacheKey]?.data) {
-                allStages = stagesCache[cacheKey].data;
-                console.warn('calculateCompanyLevel: استفاده از کش به‌دلیل خطای شبکه:', err);
+                    allStages = stagesCache[cacheKey].data;
+                    console.warn('calculateCompanyLevel: استفاده از کش به‌دلیل خطای شبکه:', err);
                 } else {
-                console.error(err);
-                return; // چیزی برای محاسبه نداریم
+                    console.error(err);
+                    return;
                 }
             }
 
-            // ---------- Stage1 های همهٔ ردیف‌ها ----------
+            // stage1 های همه ردیف‌ها
             const stage1Records = (allStages || []).filter(s => s && s.stage === 1);
 
-            // ---------- تشخیص «مرحلهٔ جاری» ----------
+            // ورودی زنده مرحله جاری
             const isCurrent = (s) =>
                 currentCompanyId &&
                 currentRecordNumber != null &&
@@ -1366,20 +1432,18 @@
                 s.record_number === currentRecordNumber &&
                 s.stage === currentStage;
 
-            // ---------- ورودی‌های زنده مرحلهٔ جاری ----------
-            const livePaid        = getNum('paid_amount');
-            const liveAdvAmort    = getNum('advance_amortization');
-            const liveParAmort    = getNum('partial_amortization');
-
-            const allocUsageRaw   = $('allocation_usage')?.value ?? '';
-            const normalizedAlloc = _normalizeNumber(allocUsageRaw);
-            const liveAlloc       = normalizedAlloc === '' ? null : Number(normalizedAlloc);
-
+            const livePaid = getNum('paid_amount');
+            const liveAdvAmort = getNum('advance_amortization');
+            const liveParAmort = getNum('partial_amortization');
             const liveInvoiceType = (currentStage === 1) ? $('invoice_type')?.value : null;
-            const liveInvAmt      = (currentStage === 1) ? getNum('invoice_amount')    : null;
-            const liveAllocAmt    = (currentStage === 1) ? getNum('allocation_amount') : null;
+            const liveInvAmt = (currentStage === 1) ? getNum('invoice_amount') : null;
+            const liveAllocAmt = (currentStage === 1) ? getNum('allocation_amount') : null;
 
-            // ---------- جمع‌ها با جایگزینی «مرحلهٔ جاری» ----------
+            const allocUsageRaw = $('allocation_usage')?.value ?? '';
+            const normalizedAlloc = normalizeNumber(allocUsageRaw);
+            const liveAlloc = normalizedAlloc === '' ? null : Number(normalizedAlloc);
+
+            // جمع‌ها
             const totalPaid = allStages.reduce((sum, s) => {
                 const v = isCurrent(s) ? livePaid : (s.paid_amount || 0);
                 return sum + (v || 0);
@@ -1395,14 +1459,12 @@
                 return sum + (v || 0);
             }, 0);
 
-            // مجموع صورت‌وضعیت‌های Stage1 (نمای نقدی)
             const totalInvoicesStage1 = stage1Records.reduce((sum, s) => {
                 const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
                 const amount = sIsCurrentS1 ? (liveInvAmt || 0) : (s.invoice_amount || 0);
                 return sum + (amount || 0);
             }, 0);
 
-            // Σ پیش‌پرداخت @stage1
             const totalAdvance = stage1Records.reduce((sum, s) => {
                 const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
                 const type = sIsCurrentS1 ? (liveInvoiceType || s.invoice_type) : s.invoice_type;
@@ -1410,7 +1472,6 @@
                 return sum + ((type === 'پیش‌پرداخت') ? amount : 0);
             }, 0);
 
-            // Σ علی‌الحساب @stage1
             const totalPartial = stage1Records.reduce((sum, s) => {
                 const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
                 const type = sIsCurrentS1 ? (liveInvoiceType || s.invoice_type) : s.invoice_type;
@@ -1418,61 +1479,40 @@
                 return sum + ((type === 'علی‌الحساب') ? amount : 0);
             }, 0);
 
-            // Σ سقف تخصیص @stage1
             const totalAllocation = stage1Records.reduce((sum, s) => {
                 const sIsCurrentS1 = (currentStage === 1) && (s.record_number === currentRecordNumber);
                 const amount = sIsCurrentS1 ? (liveAllocAmt || 0) : (s.allocation_amount || 0);
                 return sum + (amount || 0);
             }, 0);
 
-            // Σ مصرف تخصیص (شرکت): ترجیح با allocation_usage؛ در غیر این‌صورت paid_amount
             const totalAllocationConsumed = allStages.reduce((sum, s) => {
                 const base = (s.allocation_usage != null) ? s.allocation_usage : (s.paid_amount || 0);
                 const v = isCurrent(s) ? (liveAlloc != null ? liveAlloc : livePaid) : base;
                 return sum + (v || 0);
             }, 0);
 
-            // ---------- خروجی‌های نهایی (نقدی) ----------
-            const remainingAdvanceRaw  = totalAdvance - totalAdvanceAmort;
-            const remainingPartialRaw  = totalPartial - totalPartialAmort;
-            const cashBalance          = totalInvoicesStage1 - totalPaid;
-            const contractorCredit     = Math.max(cashBalance, 0);
-            const contractorDebit      = Math.max(-cashBalance, 0);
-            const remainingAllocationCompanyRaw = totalAllocation - totalAllocationConsumed;
+            // خروجی‌ها
+            const remainingAdvanceRaw = totalAdvance - totalAdvanceAmort;
+            const remainingPartialRaw = totalPartial - totalPartialAmort;
+            const cashBalance = totalInvoicesStage1 - totalPaid;
+            const contractorCredit = Math.max(cashBalance, 0);
+            const contractorDebit = Math.max(-cashBalance, 0);
+            const remainingAllocCompanyRaw = totalAllocation - totalAllocationConsumed;
 
-            // ---------- رندر به UI ----------
-            setVal('total_paid_invoices', totalPaid);
-            setVal('remaining_advance', Math.max(remainingAdvanceRaw, 0));
-            setVal('remaining_partial', Math.max(remainingPartialRaw, 0));
-            setVal('contractor_credit', contractorCredit);
-            setVal('contractor_debit', contractorDebit);
+            // نمایش در UI
+            $('total_paid_invoices').value = fmt(totalPaid);
+            $('remaining_advance').value = fmt(Math.max(remainingAdvanceRaw, 0));
+            $('remaining_partial').value = fmt(Math.max(remainingPartialRaw, 0));
+            $('contractor_credit').value = fmt(contractorCredit);
+            $('contractor_debit').value = fmt(contractorDebit);
 
-            // «مانده تخصیص (شرکت)» به‌صورت قدر مطلق + هشدار منفی
-            setVal('remaining_allocation_company', Math.abs(remainingAllocationCompanyRaw));
-            const warn = document.getElementById('remaining_allocation_company_warning');
-            if (warn) warn.textContent = remainingAllocationCompanyRaw < 0 ? 'تخصیص مازاد (سطح شرکت)' : '';
-            document.getElementById('remaining_allocation_company')
-                    .classList.toggle('negative-value', remainingAllocationCompanyRaw < 0);
+            const raComp = $('remaining_allocation_company');
+            raComp.value = fmt(Math.abs(remainingAllocCompanyRaw));
+            $('remaining_allocation_company_warning').textContent =
+                remainingAllocCompanyRaw < 0 ? 'تخصیص مازاد (سطح شرکت)' : '';
+            raComp.classList.toggle('negative-value', remainingAllocCompanyRaw < 0);
+        }
 
-            toggleNegativeClass('remaining_allocation_company', remainingAllocationCompanyRaw < 0);
-
-            // (اختیاری) اگر لازم داری خروجی‌ها را برگردانی:
-            return {
-                totals: {
-                totalPaid,
-                totalInvoicesStage1,
-                totalAdvance, totalAdvanceAmort,
-                totalPartial, totalPartialAmort,
-                totalAllocation, totalAllocationConsumed,
-                },
-                remainingAdvanceRaw,
-                remainingPartialRaw,
-                cashBalance,
-                contractorCredit,
-                contractorDebit,
-                remainingAllocationCompanyRaw,
-            };
-            }
 
 
         // نمایش مراحل با DOM امن (بدون innerHTML)
@@ -1533,7 +1573,7 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     const payload = await response.json();
                     const stages = Array.isArray(payload) ? payload : (payload.items || []);
@@ -1560,7 +1600,7 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     // پاک کردن کش مربوطه
                     Object.keys(stagesCache).forEach(key => {
@@ -1568,7 +1608,7 @@
                             delete stagesCache[key];
                         }
                     });
-                    
+
                     await updateStages(currentCompanyId, currentRecordNumber);
                     await handleViewStages(); // Refresh the modal
                     await calculateFields(); // Update calculations
@@ -1598,7 +1638,7 @@
                     credentials: 'include',
                     headers: { 'X-CSRF-Token': getCSRFToken() }
                 });
-                
+
                 if (response.ok) {
                     // پاک کردن کش مربوطه
                     Object.keys(stagesCache).forEach(key => {
@@ -1606,7 +1646,7 @@
                             delete stagesCache[key];
                         }
                     });
-                    
+
                     await updateRecordNumbers(currentCompanyId);
                     recordNumberSelect.value = 'new';
                     currentRecordNumber = null;
@@ -1645,8 +1685,8 @@
 
             // تبدیل form data به object
             for (let [key, value] of formData.entries()) {
-                if (['invoice_amount', 'allocation_amount', 'paid_amount', 
-                     'advance_amortization', 'partial_amortization', 'allocation_usage'].includes(key)) {
+                if (['invoice_amount', 'allocation_amount', 'paid_amount',
+                    'advance_amortization', 'partial_amortization', 'allocation_usage'].includes(key)) {
                     data[key] = parseFloat(normalizeNumber(value)) || 0;
                 } else {
                     data[key] = value;
@@ -1672,7 +1712,7 @@
                             delete stagesCache[key];
                         }
                     });
-                    
+
                     // به‌روزرسانی شماره‌های اختصاص داده شده توسط سرور
                     if (result.record_number) {
                         currentRecordNumber = result.record_number;
