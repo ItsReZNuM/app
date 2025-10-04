@@ -20,6 +20,19 @@ def _norm_fa(v: Optional[str]) -> Optional[str]:
     return s.strip()
 
 
+def _num_fa_to_en(v):
+    if v is None:
+        return v
+    if isinstance(v, (int, float)):
+        return v
+    s = str(v)
+    table = str.maketrans({
+        "۰":"0","۱":"1","۲":"2","۳":"3","۴":"4","۵":"5","۶":"6","۷":"7","۸":"8","۹":"9",
+        "٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9",
+    })
+    s = s.translate(table).replace(",", "").replace("\u066C","").replace("\u060C","").replace("\u202F","").replace("\u00A0","").strip()
+    return float(s) if s else 0.0
+
 # نگاشت‌های انگلیسی/فارسی → مقدار فارسی استاندارد
 _INVOICE_TYPE_MAP = {
     # EN
@@ -101,6 +114,11 @@ class FinancialInfoBase(BaseModel):
     advance_amortization: Optional[float] = Field(0, ge=0, description="استهلاک پیش‌پرداخت در این مرحله")
     partial_amortization: Optional[float] = Field(0, ge=0, description="استهلاک علی‌الحساب در این مرحله")
 
+    # عددی‌سازی ورودی‌های فارسی/رشته‌ای
+    @validator("invoice_amount","allocation_amount","paid_amount","allocation_usage","advance_amortization","partial_amortization", pre=True)
+    def _numbers_fa_to_en(cls, v):
+        return _num_fa_to_en(v)
+
     # اعتبارسنجی پایه
     @validator("record_number", "stage")
     def _pos_ints(cls, v):
@@ -175,6 +193,15 @@ class FinancialInfoUpdate(BaseModel):
         if v is not None and v <= 0:
             raise ValueError("record_number و stage باید بزرگ‌تر از صفر باشند.")
         return v
+    
+    @validator(
+        "invoice_amount","allocation_amount","paid_amount",
+        "allocation_usage","advance_amortization","partial_amortization",
+        pre=True
+    )
+    def _numbers_fa_to_en_update(cls, v):
+        return _num_fa_to_en(v)
+
 
     # اگر این سه فیلد در Update ارسال شوند، استانداردسازی شوند
     @validator("invoice_type", "request_result", "settlement_method", pre=True)

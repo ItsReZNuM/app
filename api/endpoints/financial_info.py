@@ -122,6 +122,58 @@ def _apply_metrics_to_model(model: FinancialInfoModel, metrics: Dict) -> None:
     model.contractor_debit = _to_float(metrics.get("contractor_debit"))
     model.total_paid_invoices = _to_float(metrics.get("total_paid_invoices"))
 
+
+# کمک‌تابع برای غنی‌سازی پاسخ مراحل >۱ با داده‌های مرحله ۱
+def _enrich_with_stage1_if_needed(db: Session, obj: FinancialInfoModel) -> Dict:
+    data = {
+        "company_id": obj.company_id,
+        "record_number": obj.record_number,
+        "stage": obj.stage,
+        "invoice_number": obj.invoice_number,
+        "invoice_type": obj.invoice_type,
+        "invoice_amount": obj.invoice_amount,
+        "allocation_amount": obj.allocation_amount,
+        "request_number": obj.request_number,
+        "request_date": obj.request_date,
+        "request_result": obj.request_result,
+        "settlement_method": obj.settlement_method,
+        "paid_amount": obj.paid_amount,
+        "allocation_usage": getattr(obj, "allocation_usage", 0.0),
+        "advance_amortization": obj.advance_amortization,
+        "partial_amortization": obj.partial_amortization,
+        "remaining_invoice": obj.remaining_invoice,
+        "remaining_advance": obj.remaining_advance,
+        "remaining_partial": obj.remaining_partial,
+        "remaining_allocation": obj.remaining_allocation,
+        "contractor_credit": obj.contractor_credit,
+        "contractor_debit": obj.contractor_debit,
+        "total_paid_invoices": obj.total_paid_invoices,
+        "project": None,
+    }
+    if obj.stage > 1:
+        s1 = (
+            db.query(FinancialInfoModel)
+              .filter_by(company_id=obj.company_id, record_number=obj.record_number, stage=1)
+              .first()
+        )
+        if s1:
+            # در مراحل >۱ همیشه فیلدهای «ثابت» از مرحله ۱ روی پاسخ override شوند
+            data["invoice_number"]    = s1.invoice_number
+            data["invoice_type"]      = s1.invoice_type
+            data["invoice_amount"]    = s1.invoice_amount
+            data["allocation_amount"] = s1.allocation_amount
+            data["request_number"]    = s1.request_number
+            data["request_date"]      = s1.request_date
+            data["request_result"]    = s1.request_result
+            data["settlement_method"] = s1.settlement_method
+        else:
+            # اگر مرحله ۱ موجود نیست ولی stage>1 است، بهتر است خطا بدهیم
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                                detail="برای این ردیف مرحله ۱ وجود ندارد؛ امکان بازگردانی مرحله‌های بعدی نیست.")
+
+    return data
+
+
 # ----------------------------
 # Endpoints
 # ----------------------------
@@ -143,7 +195,7 @@ def get_financial_info(
     )
     if not obj:
         raise HTTPException(status_code=404, detail="رکورد مالی یافت نشد.")
-    return obj
+    return _enrich_with_stage1_if_needed(db, obj)
 
 
 @router.get(
@@ -161,7 +213,8 @@ def list_financial_infos(
         .order_by(FinancialInfoModel.stage)
         .all()
     )
-    return {"items": items, "total": len(items)}
+    enriched = [_enrich_with_stage1_if_needed(db, it) for it in items]
+    return {"items": enriched, "total": len(enriched)}
 
 
 @router.get(
@@ -179,7 +232,8 @@ def get_financial_info_by_company(
               .order_by(FinancialInfoModel.record_number, FinancialInfoModel.stage)
               .all()
         )
-        return {"items": financial_infos, "total": len(financial_infos)}
+        enriched = [_enrich_with_stage1_if_needed(db, it) for it in financial_infos]
+        return {"items": enriched, "total": len(enriched)}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -212,36 +266,63 @@ def create_financial_info(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="رکورد مالی با این مشخصات از قبل وجود دارد.",
             )
+        
+        if financial_info.stage > 1:
+            s1_exists = db.query(FinancialInfoModel).filter_by(
+                company_id=financial_info.company_id,
+                record_number=financial_info.record_number,
+                stage=1
+            ).first()
+            if not s1_exists:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                                    detail="برای ایجاد مرحله جدید، مرحله ۱ این ردیف باید قبلاً ثبت شده باشد.")
+
 
         # ساخت آبجکت ORM (فعلاً بدون متریک‌ها)
-        obj = FinancialInfoModel(
-            company_id=financial_info.company_id,
-            record_number=financial_info.record_number,
-            stage=financial_info.stage,
-            invoice_number=financial_info.invoice_number,
-            invoice_type=financial_info.invoice_type,
-            invoice_amount=_to_float(financial_info.invoice_amount),
-            allocation_amount=_to_float(financial_info.allocation_amount),
-            request_number=financial_info.request_number,
-            request_date=financial_info.request_date,
-            request_result=financial_info.request_result,
-            settlement_method=financial_info.settlement_method,
-            paid_amount=_to_float(financial_info.paid_amount),
-            # 🔧 فیلد جدید: مصرف تخصیص
-            allocation_usage=_to_float(getattr(financial_info, "allocation_usage", 0.0)),
-            advance_amortization=_to_float(financial_info.advance_amortization),
-            partial_amortization=_to_float(financial_info.partial_amortization),
-        )
+        if financial_info.stage == 1:
+            obj = FinancialInfoModel(
+                company_id=financial_info.company_id,
+                record_number=financial_info.record_number,
+                stage=financial_info.stage,
+                invoice_number=financial_info.invoice_number,
+                invoice_type=financial_info.invoice_type,
+                invoice_amount=_to_float(financial_info.invoice_amount),
+                allocation_amount=_to_float(financial_info.allocation_amount),
+                request_number=financial_info.request_number,
+                request_date=financial_info.request_date,
+                request_result=financial_info.request_result,
+                settlement_method=financial_info.settlement_method,
+                paid_amount=_to_float(financial_info.paid_amount),
+                allocation_usage=_to_float(getattr(financial_info, "allocation_usage", 0.0)),
+                advance_amortization=_to_float(financial_info.advance_amortization),
+                partial_amortization=_to_float(financial_info.partial_amortization),
+            )
+        else:
+            obj = FinancialInfoModel(
+                company_id=financial_info.company_id,
+                record_number=financial_info.record_number,
+                stage=financial_info.stage,
+                # فیلدهای ثابت در مراحل بعد ثبت/تغییر داده نمی‌شوند
+                paid_amount=_to_float(financial_info.paid_amount),
+                allocation_usage=_to_float(getattr(financial_info, "allocation_usage", 0.0)),
+                advance_amortization=_to_float(financial_info.advance_amortization or 0.0),
+                partial_amortization=_to_float(financial_info.partial_amortization or 0.0),
+                settlement_method=financial_info.settlement_method,
+            )
 
         # آماده‌سازی override برای مرحلهٔ جاری
         override_current = {
             "company_id": obj.company_id,
             "record_number": obj.record_number,
             "stage": obj.stage,
-            "invoice_number": obj.invoice_number or "",
-            "invoice_type": obj.invoice_type,
-            "invoice_amount": _to_float(obj.invoice_amount),
-            "allocation_amount": _to_float(obj.allocation_amount),
+            **(
+            {
+                "invoice_number": obj.invoice_number or "",
+                "invoice_type": obj.invoice_type,
+                "invoice_amount": _to_float(obj.invoice_amount),
+                "allocation_amount": _to_float(obj.allocation_amount),
+            } if obj.stage == 1 else {}
+            ),
             "paid_amount": _to_float(obj.paid_amount),
             # 🔧 لحاظ‌کردن مصرف تخصیص در محاسبات
             "allocation_usage": _to_float(getattr(obj, "allocation_usage", 0.0)),
@@ -263,7 +344,8 @@ def create_financial_info(
         db.add(obj)
         db.commit()
         db.refresh(obj)
-        return obj
+        # پاسخ را با داده‌های stage1 غنی کن تا فیلدهای ثابت None نباشند
+        return _enrich_with_stage1_if_needed(db, obj)
 
     except HTTPException:
         raise
@@ -297,14 +379,16 @@ def update_financial_info(
             raise HTTPException(status_code=404, detail="رکورد مالی برای ویرایش یافت نشد.")
 
         # بروزرسانی فیلدهای قابل ویرایش
-        if financial_info.invoice_number is not None:
-            obj.invoice_number = financial_info.invoice_number
-        if financial_info.invoice_type is not None:
-            obj.invoice_type = financial_info.invoice_type
-        if financial_info.invoice_amount is not None:
-            obj.invoice_amount = _to_float(financial_info.invoice_amount)
-        if financial_info.allocation_amount is not None:
-            obj.allocation_amount = _to_float(financial_info.allocation_amount)
+        # فیلدهای ثابت فقط اگر stage==1 بروز شوند
+        if obj.stage == 1:
+            if financial_info.invoice_number is not None:
+                obj.invoice_number = financial_info.invoice_number
+            if financial_info.invoice_type is not None:
+                obj.invoice_type = financial_info.invoice_type
+            if financial_info.invoice_amount is not None:
+                obj.invoice_amount = _to_float(financial_info.invoice_amount)
+            if financial_info.allocation_amount is not None:
+                obj.allocation_amount = _to_float(financial_info.allocation_amount)
         if financial_info.paid_amount is not None:
             obj.paid_amount = _to_float(financial_info.paid_amount)
         if financial_info.advance_amortization is not None:
@@ -327,10 +411,14 @@ def update_financial_info(
             "company_id": obj.company_id,
             "record_number": obj.record_number,
             "stage": obj.stage,
-            "invoice_number": obj.invoice_number or "",
-            "invoice_type": obj.invoice_type,
-            "invoice_amount": _to_float(obj.invoice_amount),
-            "allocation_amount": _to_float(obj.allocation_amount),
+            **(
+                {
+                    "invoice_number": obj.invoice_number or "",
+                    "invoice_type": obj.invoice_type,
+                    "invoice_amount": _to_float(obj.invoice_amount),
+                    "allocation_amount": _to_float(obj.allocation_amount),
+                } if obj.stage == 1 else {}
+            ),
             "paid_amount": _to_float(obj.paid_amount),
             # 🔧 لحاظ‌کردن مصرف تخصیص در محاسبات
             "allocation_usage": _to_float(getattr(obj, "allocation_usage", 0.0)),
@@ -351,7 +439,8 @@ def update_financial_info(
         db.add(obj)
         db.commit()
         db.refresh(obj)
-        return obj
+        # مثل بالا: پاسخ غنی‌شده بده
+        return _enrich_with_stage1_if_needed(db, obj)
 
     except HTTPException:
         raise
@@ -393,3 +482,17 @@ def delete_financial_info(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"خطا در حذف اطلاعات مالی: {str(e)}",
         )
+
+
+# app/api/endpoints/financial_info.py
+@router.delete("/{company_id}/{record_number}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_record(company_id: str, record_number: int, db: Session = Depends(get_db)):
+    rows = (db.query(FinancialInfoModel)
+              .filter_by(company_id=company_id, record_number=record_number)
+              .all())
+    if not rows:
+        raise HTTPException(status_code=404, detail="ردیف یافت نشد.")
+    for r in rows:
+        db.delete(r)
+    db.commit()
+    return

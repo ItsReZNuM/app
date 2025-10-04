@@ -70,7 +70,14 @@ def _to_float(v: Any) -> float:
             return float(v)
         # تلاش برای تبدیل رشته‌هایی که جداکننده دارند
         if isinstance(v, str):
-            s = v.replace(",", "").replace("\u066C", "").replace("\u060C", "").replace("\u202F", "").replace("\u00A0", "").strip()
+            # نگاشت ارقام فارسی/عربی → انگلیسی
+            table = str.maketrans({
+                "۰":"0","۱":"1","۲":"2","۳":"3","۴":"4","۵":"5","۶":"6","۷":"7","۸":"8","۹":"9",
+                "٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9",
+            })
+            s = v.translate(table)
+            s = s.replace(",", "").replace("\u066C", "").replace("\u060C", "").replace("\u202F", "").replace("\u00A0", "").strip()
+            
             if s == "":
                 return 0.0
             return float(s)
@@ -100,19 +107,13 @@ def _find_stage1(rec_list: List[FinancialRecord]) -> Optional[FinancialRecord]:
 
 def _resolve_allocation_usage(r: FinancialRecord) -> float:
     """
-    سیاست پیش‌فرض: اگر allocation_usage داده شده باشد همان؛
-    در غیر این‌صورت فقط پرداخت‌های «نقد» مصرف تخصیص محسوب می‌شود.
+    سیاست جدید و هم‌سو با فرانت: اگر allocation_usage داده شده باشد همان؛
+    در غیر این‌صورت «مصرف تخصیص = مبلغ پرداختی همان مرحله» (صرف‌نظر از روش تسویه).
     """
     explicit = r.get("allocation_usage")
     if explicit is not None:
         return _to_float(explicit)
-
-    method = (r.get("settlement_method") or "").strip()
-    paid = _to_float(r.get("paid_amount"))
-    if method in ("", "نقد", "cash", "Cash"):
-        return paid
-    # سایر روش‌ها (مثل اسناد خزانه) مصرف تخصیص محسوب نمی‌شود؛ در صورت نیاز سیاست را تغییر دهید.
-    return 0.0
+    return _to_float(r.get("paid_amount"))
 
 
 # ----- Core calculations -----
